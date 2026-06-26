@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tello API 테스트</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; }
+    body { max-width: 960px; margin: 1rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.25rem; }
+    fieldset { margin: 0.75rem 0; border: 1px solid #ccc; padding: 0.75rem; border-radius: 6px; }
+    legend { font-weight: 600; }
+    label { display: block; margin: 0.35rem 0 0.15rem; font-size: 0.85rem; color: #333; }
+    input[type="text"] { width: 100%; max-width: 36rem; padding: 0.35rem 0.5rem; box-sizing: border-box; }
+    .row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; align-items: center; }
+    button { padding: 0.4rem 0.65rem; cursor: pointer; }
+    #log {
+      width: 100%;
+      min-height: 8rem;
+      max-height: 17.6rem;
+      overflow-y: auto;
+      overflow-x: auto;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      background: #111;
+      color: #cfc;
+      padding: 0.5rem;
+      border-radius: 4px;
+      white-space: pre-wrap;
+    }
+    #cam { max-width: 100%; background: #222; border-radius: 4px; min-height: 200px; object-fit: contain; }
+    .video-row { display: flex; gap: 0.8rem; align-items: flex-start; flex-wrap: wrap; }
+    .video-box { flex: 1 1 620px; min-width: 320px; }
+    .key-box { flex: 0 0 280px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0.6rem; background: #fafafa; }
+    .key-grid { display: grid; gap: 0.35rem; margin-top: 0.45rem; }
+    .grid-wasd { grid-template-columns: repeat(3, 1fr); }
+    .grid-arrows { grid-template-columns: repeat(3, 1fr); }
+    .k {
+      user-select: none;
+      text-align: center;
+      border: 1px solid #c9c9c9;
+      border-radius: 6px;
+      padding: 0.45rem 0.2rem;
+      background: #fff;
+      color: #333;
+      font-weight: 600;
+    }
+    .k.empty { border-style: dashed; color: #aaa; }
+    .k.on { background: #1e40af; color: #fff; border-color: #1e40af; }
+    .kbd-status { font-size: 0.8rem; color: #555; margin-top: 0.5rem; }
+    .kbd-value { font-family: ui-monospace, monospace; font-size: 0.85rem; }
+    .hint { font-size: 0.8rem; color: #666; margin-top: 0.35rem; }
+    .top-panels {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 0.8rem;
+      align-items: start;
+    }
+    .top-panels fieldset {
+      margin: 0;
+      min-height: 100%;
+    }
+    #battery-panel {
+      font-size: 1.1rem;
+      padding: 0.6rem 0.75rem;
+      background: #f4f7ff;
+      border: 1px solid #c5d4f0;
+      border-radius: 6px;
+      margin-top: 0.35rem;
+    }
+    #battery-panel .pct { font-weight: 700; font-size: 1.35rem; color: #1a4a8a; }
+    #battery-panel.warn .pct { color: #b45309; }
+    #battery-panel.bad .pct { color: #b91c1c; }
+    .battery-meta { font-size: 0.8rem; color: #555; margin-top: 0.25rem; }
+    label.inline { display: inline; margin-right: 0.35rem; }
+    @media (max-width: 900px) {
+      .top-panels { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Tello 제어 테스트</h1>
+  <p class="hint">
+    서버: <code>uv run python -m api</code> 후 브라우저에서 이 페이지를 열면 됩니다
+    (예: <code>http://서버IP:8000/test-web/</code>).
+    <strong>서버 주소</strong> 칸은 비우거나 그대로 두면 <strong>지금 접속한 호스트·포트</strong>로 API를 호출합니다.
+    다른 주소의 API를 쓸 때만 수정하세요.
+    아래 암호는 <code>modules/ctrl.py</code>의 <code>API_AUTHORIZATION</code> 과 같아야 합니다.
+  </p>
+  <p class="hint">
+    드론 연결은 서버가 시작될 때 DB 기반으로 자동 수행됩니다(클라이언트 연결 버튼 없음).
+    이륙이 실패하면 배터리(너무 낮으면 불가)·평평한 바닥·주변 여유를 확인하고,
+    <strong>진단 정보</strong> 또는 아래 <strong>배터리</strong>를 보세요.
+    <strong>이륙 (스트림 잠시 끄고)</strong>도 시험해 볼 수 있습니다.
+    <strong>착륙</strong>은 공중에 있을 때만 됩니다.
+  </p>
+
+  <fieldset>
+    <legend>주소·암호</legend>
+    <label for="base">서버 주소 (API, 비우면 현재 페이지와 동일 호스트)</label>
+    <input id="base" type="text" value="" placeholder="예: 비움 → 자동" autocomplete="off" />
+    <label for="token">인증 암호 (Authorization 헤더와 동일)</label>
+    <input id="token" type="text" value="tello-api-secret-change-me" autocomplete="off" />
+    <label for="drone-id">드론 ID</label>
+    <input id="drone-id" type="text" value="main" autocomplete="off" />
+    <p class="hint">예: main, remote-1008 (remote-1008은 스트리밍 전용)</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>미션 시작</legend>
+    <div class="row">
+      <label for="mission-id">미션 번호 (mission_id)</label>
+      <input id="mission-id" type="number" value="1" min="1" style="width:7rem;" />
+      <button type="button" id="btn-mission-start">미션 시작 요청</button>
+    </div>
+    <p class="hint">`/missions/start` 호출. 내부 action 요청/응답 trace는 응답 JSON의 `trace`로 확인.</p>
+  </fieldset>
+
+  <div class="top-panels">
+    <fieldset>
+      <legend>명령</legend>
+      <div class="row">
+        <button type="button" data-m="ping" data-k="연결 확인">연결 확인</button>
+        <button type="button" data-m="stream_on" data-k="영상 켜기">영상 켜기</button>
+        <button type="button" data-m="stream_off" data-k="영상 끄기">영상 끄기</button>
+      </div>
+      <div class="row">
+        <button type="button" data-m="takeoff" data-k="이륙">이륙</button>
+        <button type="button" id="btn-takeoff-nostream">이륙 (스트림 잠시 끄고)</button>
+        <button type="button" data-m="land" data-k="착륙">착륙</button>
+        <button type="button" data-m="emergency" data-k="비상 정지">비상 정지</button>
+      </div>
+      <div class="row">
+        <button type="button" data-m="battery" data-k="배터리 (로그에 표시)">배터리 (로그에 표시)</button>
+        <button type="button" data-m="state" data-k="상태 전체">상태 전체</button>
+        <button type="button" data-m="diagnostics" data-k="진단 정보">진단 정보</button>
+        <button type="button" id="btn-rc">조이스틱 중립 (0,0,0,0)</button>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>배터리</legend>
+      <div id="battery-panel">
+        <span>배터리: </span><span class="pct" id="battery-pct">—</span><span> %</span>
+        <div class="battery-meta" id="battery-meta">드론에 연결한 뒤 자동으로 갱신됩니다.</div>
+      </div>
+      <div class="row" style="margin-top: 0.6rem;">
+        <label class="inline"><input type="checkbox" id="battery-auto" checked /> 자동으로 배터리 물어보기</label>
+        <label class="inline" for="battery-interval">간격(초)</label>
+        <input type="number" id="battery-interval" value="5" min="2" max="60" style="width:4rem;" />
+        <button type="button" id="btn-battery-now">지금 배터리만 다시 조회</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <fieldset>
+    <legend>영상 (영상 켠 뒤 사용)</legend>
+    <p class="hint">
+      미리보기는 서버에서 JPEG를 짧은 주기로 받아 갱신합니다.
+    </p>
+    <div class="video-row">
+      <div class="video-box">
+        <div class="row">
+          <button type="button" id="snap-start">미리보기 시작</button>
+          <button type="button" id="snap-stop">미리보기 중지</button>
+        </div>
+        <img id="cam" alt="카메라" width="640" height="480" />
+      </div>
+      <div class="key-box">
+        <strong>키보드 조작 (WASD + 방향키)</strong>
+        <p class="hint" style="margin-top:0.3rem;">
+          체크 후 키 입력 시 색이 바뀌며 조작 명령이 전송됩니다.
+        </p>
+        <label class="inline">
+          <input type="checkbox" id="kbd-enable" />
+          키보드 조작 활성화 (체크 시 전송)
+        </label>
+        <div class="kbd-status">W/S: 상하, A/D: 회전, 방향키: 전후좌우</div>
+
+        <div class="key-grid grid-wasd">
+          <div class="k empty"> </div>
+          <div class="k" id="k-keyw">W (상)</div>
+          <div class="k empty"> </div>
+          <div class="k" id="k-keya">A (좌회전)</div>
+          <div class="k empty">●</div>
+          <div class="k" id="k-keyd">D (우회전)</div>
+          <div class="k empty"> </div>
+          <div class="k" id="k-keys">S (하)</div>
+          <div class="k empty"> </div>
+        </div>
+
+        <div class="key-grid grid-arrows">
+          <div class="k empty"> </div>
+          <div class="k" id="k-arrowup">↑ (전진)</div>
+          <div class="k empty"> </div>
+          <div class="k" id="k-arrowleft">← (좌)</div>
+          <div class="k empty">●</div>
+          <div class="k" id="k-arrowright">→ (우)</div>
+          <div class="k empty"> </div>
+          <div class="k" id="k-arrowdown">↓ (후진)</div>
+          <div class="k empty"> </div>
+        </div>
+
+        <div class="kbd-status">
+          현재 전송값:
+          <span class="kbd-value" id="kbd-values">lr=0 fb=0 ud=0 yaw=0</span>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>명령 로그 (영어 코드명은 기술용)</legend>
+    <pre id="log"></pre>
+  </fieldset>
+
+  <script>
+    const logEl = document.getElementById("log");
+    const batteryPanel = document.getElementById("battery-panel");
+    const batteryPctEl = document.getElementById("battery-pct");
+    const batteryMetaEl = document.getElementById("battery-meta");
+
+    function nowStamp() {
+      return new Date().toLocaleString("ko-KR", { hour12: false });
+    }
+
+    function log(msg) {
+      logEl.textContent += msg + "\n";
+      requestAnimationFrame(() => {
+        logEl.scrollTop = logEl.scrollHeight;
+      });
+    }
+
+    function toCurlPost(url, headers, bodyObj) {
+      const token = headers.Authorization || "";
+      const json = JSON.stringify(bodyObj).replace(/"/g, '\\"');
+      return [
+        `curl -s -X POST "${url}" \\`,
+        `  -H "Content-Type: application/json" \\`,
+        `  -H "Authorization: ${token}" \\`,
+        `  -d "${json}"`,
+      ].join("\n");
+    }
+
+    function logApiExchange(label, curlCmd, status, responseText, requestTs, responseTs) {
+      log(
+        [
+          `=== ${responseTs} | ${label} ===`,
+          `[time] request=${requestTs}`,
+          `[time] response=${responseTs}`,
+          "[request: curl]",
+          curlCmd,
+          `[response] HTTP ${status}`,
+          responseText,
+          "",
+        ].join("\n")
+      );
+      sendApiLogToServer({
+        label,
+        request_ts: requestTs,
+        response_ts: responseTs,
+        curl: curlCmd,
+        status,
+        response: responseText,
+      });
+    }
+
+    async function sendApiLogToServer(payload) {
+      try {
+        await fetch(baseUrl() + "/test-web/log", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(payload),
+          keepalive: true,
+        });
+      } catch {
+        // 페이지 로그는 계속 동작해야 하므로 서버 저장 실패는 무시
+      }
+    }
+
+    function baseUrl() {
+      const raw = document.getElementById("base").value.trim().replace(/\/$/, "");
+      if (raw) return raw;
+      return window.location.origin;
+    }
+    function authHeaders() {
+      const t = document.getElementById("token").value;
+      return {
+        "Content-Type": "application/json",
+        "Authorization": t,
+      };
+    }
+    function droneId() {
+      const v = document.getElementById("drone-id").value.trim();
+      return v || "main";
+    }
+
+    async function rpc(method, params, label) {
+      const name = label || method;
+      const mergedParams = Object.assign({ drone_id: droneId() }, params || {});
+      const body = { jsonrpc: "2.0", method, params: mergedParams, id: Date.now() };
+      const url = baseUrl() + "/rpc";
+      const headers = authHeaders();
+      const requestTs = nowStamp();
+      const r = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      const text = await r.text();
+      const responseTs = nowStamp();
+      logApiExchange(name, toCurlPost(url, headers, body), r.status, text, requestTs, responseTs);
+      try {
+        return JSON.parse(text);
+      } catch {
+        return null;
+      }
+    }
+
+    async function postJsonWithLog(url, body, label) {
+      const headers = authHeaders();
+      const requestTs = nowStamp();
+      const r = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      });
+      const text = await r.text();
+      const responseTs = nowStamp();
+      logApiExchange(label, toCurlPost(url, headers, body), r.status, text, requestTs, responseTs);
+      try {
+        return JSON.parse(text);
+      } catch {
+        return null;
+      }
+    }
+
+    document.querySelectorAll("button[data-m]").forEach((btn) => {
+      const method = btn.getAttribute("data-m");
+      const label = btn.getAttribute("data-k") || method;
+      btn.addEventListener("click", () => rpc(method, {}, label));
+    });
+
+    document.getElementById("btn-takeoff-nostream").addEventListener("click", () =>
+      rpc("takeoff", { pause_stream_first: true }, "이륙 (스트림 잠시 끄고)")
+    );
+
+    document.getElementById("btn-rc").addEventListener("click", () =>
+      rpc("rc", { lr: 0, fb: 0, ud: 0, yaw: 0 }, "조이스틱 중립")
+    );
+
+    document.getElementById("btn-mission-start").addEventListener("click", async () => {
+      const missionIdRaw = document.getElementById("mission-id").value;
+      const missionId = parseInt(missionIdRaw, 10);
+      if (isNaN(missionId) || missionId <= 0) {
+        log(`${nowStamp()} | 미션 시작 입력 오류: mission_id는 1 이상의 정수여야 합니다.`);
+        return;
+      }
+      await postJsonWithLog(
+        baseUrl() + "/missions/start",
+        { mission_id: missionId, drone_id: droneId() },
+        "미션 시작"
+      );
+    });
+
+    // ===== 키보드 조작 =====
+    const pressed = new Set();
+    const rcSpeed = 40;
+    const kbdValuesEl = document.getElementById("kbd-values");
+    const kbdEnableEl = document.getElementById("kbd-enable");
+    const keyMap = {
+      KeyW: "k-keyw",
+      KeyA: "k-keya",
+      KeyS: "k-keys",
+      KeyD: "k-keyd",
+      ArrowUp: "k-arrowup",
+      ArrowDown: "k-arrowdown",
+      ArrowLeft: "k-arrowleft",
+      ArrowRight: "k-arrowright",
+    };
+
+    function setKeyUi(code, on) {
+      const id = keyMap[code];
+      if (!id) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle("on", on);
+    }
+
+    function computeRcFromKeys() {
+      let lr = 0;
+      let fb = 0;
+      let ud = 0;
+      let yaw = 0;
+      if (pressed.has("ArrowLeft")) lr -= rcSpeed;
+      if (pressed.has("ArrowRight")) lr += rcSpeed;
+      if (pressed.has("ArrowUp")) fb += rcSpeed;
+      if (pressed.has("ArrowDown")) fb -= rcSpeed;
+      if (pressed.has("KeyW")) ud += rcSpeed;
+      if (pressed.has("KeyS")) ud -= rcSpeed;
+      if (pressed.has("KeyA")) yaw -= rcSpeed;
+      if (pressed.has("KeyD")) yaw += rcSpeed;
+      return { lr, fb, ud, yaw };
+    }
+
+    async function sendRcSilent(v) {
+      try {
+        const body = {
+          jsonrpc: "2.0",
+          method: "rc",
+          params: Object.assign({ drone_id: droneId() }, v),
+          id: Date.now(),
+        };
+        const url = baseUrl() + "/rpc";
+        const headers = authHeaders();
+        const requestTs = nowStamp();
+        const r = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+        const text = await r.text();
+        const responseTs = nowStamp();
+        logApiExchange("키보드 조작 rc", toCurlPost(url, headers, body), r.status, text, requestTs, responseTs);
+      } catch {
+        // 키 입력 루프에서는 로그 스팸 방지
+      }
+    }
+
+    function updateKeyboardStatus() {
+      const v = computeRcFromKeys();
+      kbdValuesEl.textContent = `lr=${v.lr} fb=${v.fb} ud=${v.ud} yaw=${v.yaw}`;
+      return v;
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (!(e.code in keyMap)) return;
+      e.preventDefault();
+      if (!pressed.has(e.code)) {
+        pressed.add(e.code);
+        setKeyUi(e.code, true);
+        updateKeyboardStatus();
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (!(e.code in keyMap)) return;
+      e.preventDefault();
+      if (pressed.has(e.code)) {
+        pressed.delete(e.code);
+        setKeyUi(e.code, false);
+        updateKeyboardStatus();
+      }
+    });
+
+    setInterval(() => {
+      const v = updateKeyboardStatus();
+      if (!kbdEnableEl.checked) return;
+      sendRcSilent(v);
+    }, 100);
+
+    /** 배터리만 조용히 조회하고 패널 갱신 (로그에는 안 남김) */
+    async function refreshBatteryPanel(source) {
+      const srcLabel = source === "manual" ? "수동 조회" : "자동 갱신";
+      const body = {
+        jsonrpc: "2.0",
+        method: "battery",
+        params: { drone_id: droneId() },
+        id: Date.now(),
+      };
+      try {
+        const r = await fetch(baseUrl() + "/rpc", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        });
+        const text = await r.text();
+        let j;
+        try {
+          j = JSON.parse(text);
+        } catch {
+          batteryPctEl.textContent = "?";
+          batteryMetaEl.textContent = "응답 파싱 실패 · HTTP " + r.status;
+          batteryPanel.classList.remove("warn", "bad");
+          return;
+        }
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString("ko-KR", { hour12: false });
+
+        if (j.error) {
+          batteryPctEl.textContent = "—";
+          batteryMetaEl.textContent =
+            timeStr + " · 조회 실패: " + (j.error.message || JSON.stringify(j.error));
+          batteryPanel.classList.remove("warn", "bad");
+          return;
+        }
+        const pct = j.result && typeof j.result.battery === "number" ? j.result.battery : null;
+        if (pct === null) {
+          batteryPctEl.textContent = "?";
+          batteryMetaEl.textContent = timeStr + " · 배터리 값 없음";
+          return;
+        }
+        batteryPctEl.textContent = String(pct);
+        batteryMetaEl.textContent = timeStr + " · " + srcLabel;
+        batteryPanel.classList.remove("warn", "bad");
+        if (pct < 20) batteryPanel.classList.add("bad");
+        else if (pct < 40) batteryPanel.classList.add("warn");
+      } catch (e) {
+        batteryPctEl.textContent = "—";
+        batteryMetaEl.textContent = "네트워크 오류: " + e;
+        batteryPanel.classList.remove("warn", "bad");
+      }
+    }
+
+    document.getElementById("btn-battery-now").addEventListener("click", () => {
+      refreshBatteryPanel("manual");
+    });
+
+    let batteryTimer = null;
+    function restartBatteryTimer() {
+      if (batteryTimer) {
+        clearInterval(batteryTimer);
+        batteryTimer = null;
+      }
+      const auto = document.getElementById("battery-auto").checked;
+      if (!auto) {
+        batteryMetaEl.textContent = "자동 갱신 꺼짐 · 필요할 때「지금 배터리만 다시 조회」";
+        return;
+      }
+      let sec = parseInt(document.getElementById("battery-interval").value, 10);
+      if (isNaN(sec) || sec < 2) sec = 5;
+      const ms = sec * 1000;
+      refreshBatteryPanel("auto");
+      batteryTimer = setInterval(() => refreshBatteryPanel("auto"), ms);
+    }
+
+    document.getElementById("battery-auto").addEventListener("change", restartBatteryTimer);
+    document.getElementById("battery-interval").addEventListener("change", restartBatteryTimer);
+
+    let snapTimer = null;
+    const cam = document.getElementById("cam");
+
+    document.getElementById("snap-start").addEventListener("click", () => {
+      if (snapTimer) clearInterval(snapTimer);
+      const token = document.getElementById("token").value;
+      const b = baseUrl();
+      snapTimer = setInterval(async () => {
+        try {
+          const r = await fetch(
+            b + "/snapshot.jpg?drone_id=" + encodeURIComponent(droneId()) + "&_ts=" + Date.now(),
+            {
+            headers: { Authorization: token },
+            cache: "no-store",
+          });
+          if (!r.ok) return;
+          const blob = await r.blob();
+          const url = URL.createObjectURL(blob);
+          cam.onload = () => URL.revokeObjectURL(url);
+          cam.src = url;
+        } catch (e) {
+          log(`${nowStamp()} | 미리보기 오류: ${e}`);
+        }
+      }, 100);
+      log(`${nowStamp()} | 미리보기 시작 (100ms 간격)`);
+    });
+
+    document.getElementById("snap-stop").addEventListener("click", () => {
+      if (snapTimer) clearInterval(snapTimer);
+      snapTimer = null;
+      log(`${nowStamp()} | 미리보기 중지`);
+    });
+
+    (function initFromPage() {
+      const baseEl = document.getElementById("base");
+      if (!baseEl.value.trim()) {
+        baseEl.value = window.location.origin;
+      }
+    })();
+
+    (async function syncDefaultDroneId() {
+      try {
+        const r = await fetch(baseUrl() + "/drones", {
+          headers: { Authorization: document.getElementById("token").value.trim() },
+        });
+        if (!r.ok) return;
+        const j = await r.json();
+        const def = j.default_drone_id;
+        const did = document.getElementById("drone-id");
+        const cur = did.value.trim();
+        if (def && (cur === "" || cur === "main")) {
+          did.value = def;
+        }
+      } catch {
+        /* DB/인증 없으면 무시 */
+      }
+    })();
+
+    restartBatteryTimer();
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[project]
+name = "drone-control"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "djitellopy>=2.5.0",
+    "opencv-python>=4.13.0.92",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "npty-util",
+    "npty-db",
+    "m3u8>=6.0.0",
+    "ultralytics>=8.0.0",
+]
+
+[tool.uv.sources]
+npty-util = { git = "https://public:public@git.npty.xyz/packages/npty/util.git" }
+npty-db = { git = "https://public:public@git.npty.xyz/packages/npty/db.git" }

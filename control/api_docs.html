@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>api_docs.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="tello-http-api-%EB%AC%B8%EC%84%9C">Tello HTTP API 문서</h1>
+<p><code>control</code> 디렉터리에서 서버를 실행한 뒤 아래 URL을 사용한다.</p>
+<ul>
+<li>기본 베이스 URL: <code>http://127.0.0.1:8000</code> (포트는 실행 시 바뀔 수 있음)</li>
+<li>인증: HTTP 헤더 <code>Authorization</code> 값이 <code>modules/ctrl.py</code>의 <strong><code>API_AUTHORIZATION</code></strong> 상수와 <strong>완전히 동일</strong>해야 한다. (아래 예시에서는 기본값 <code>tello-api-secret-change-me</code> 사용)</li>
+</ul>
+<p>쉘에서 반복 사용할 때:</p>
+<pre class="hljs"><code><div><span class="hljs-built_in">export</span> BASE=<span class="hljs-string">'http://127.0.0.1:8000'</span>
+<span class="hljs-built_in">export</span> AUTH=<span class="hljs-string">'tello-api-secret-change-me'</span>
+</div></code></pre>
+<hr>
+<h2 id="%EA%B3%B5%ED%86%B5">공통</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>설명</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>인증 필요</td>
+<td><code>POST /rpc</code>, <code>GET /snapshot.jpg</code>, <code>GET /stream.mjpeg</code></td>
+</tr>
+<tr>
+<td>인증 불필요</td>
+<td><code>GET /</code>, <code>GET /health</code>, <code>GET /docs</code>, <code>GET /test-web/</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="get">GET <code>/</code></h2>
+<p>API 안내 JSON.</p>
+<p><strong>curl 예시</strong></p>
+<pre class="hljs"><code><div>curl -s <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/"</span>
+</div></code></pre>
+<hr>
+<h2 id="get-health">GET <code>/health</code></h2>
+<p>서버 생존 확인.</p>
+<p><strong>응답 예:</strong> <code>{&quot;status&quot;:&quot;ok&quot;}</code></p>
+<p><strong>curl 예시</strong></p>
+<pre class="hljs"><code><div>curl -s <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/health"</span>
+</div></code></pre>
+<hr>
+<h2 id="get-docs">GET <code>/docs</code></h2>
+<p>Swagger UI (OpenAPI). 브라우저에서 연다.</p>
+<p><strong>curl 예시</strong> (HTML이 반환됨)</p>
+<pre class="hljs"><code><div>curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/docs"</span>
+</div></code></pre>
+<hr>
+<h2 id="get-test-web">GET <code>/test-web/</code></h2>
+<p>로컬 테스트용 정적 웹 페이지 (<code>control/test/web/</code>). 인증 없이 HTML만 제공한다.</p>
+<p><strong>curl 예시</strong></p>
+<pre class="hljs"><code><div>curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/test-web/"</span>
+</div></code></pre>
+<p>브라우저:</p>
+<pre class="hljs"><code><div>http://127.0.0.1:8000/test-web/
+</div></code></pre>
+<hr>
+<h2 id="post-rpc">POST <code>/rpc</code></h2>
+<p>JSON-RPC 2.0 <strong>단일 요청</strong> 객체를 본문에 넣는다.</p>
+<p><strong>필수 헤더</strong></p>
+<ul>
+<li><code>Content-Type: application/json</code></li>
+<li><code>Authorization: &lt;API_AUTHORIZATION과 동일&gt;</code></li>
+</ul>
+<p><strong>요청 본문 형식</strong></p>
+<pre class="hljs"><code><div>{
+  <span class="hljs-attr">"jsonrpc"</span>: <span class="hljs-string">"2.0"</span>,
+  <span class="hljs-attr">"method"</span>: <span class="hljs-string">"&lt;메서드명&gt;"</span>,
+  <span class="hljs-attr">"params"</span>: { },
+  <span class="hljs-attr">"id"</span>: <span class="hljs-number">1</span>
+}
+</div></code></pre>
+<ul>
+<li><code>params</code>는 생략 가능(내부에서 빈 객체로 처리).</li>
+<li><code>method</code>는 <code>drone.connect</code>처럼 <code>drone.</code> 접두어를 붙여도 동일하게 처리된다.</li>
+</ul>
+<p><strong>curl 예시 — ping</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"ping","id":1}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — connect</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"connect","params":{},"id":2}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — connect (호스트·상태 대기 옵션)</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"connect","params":{"host":"192.168.10.1","wait_for_state":true},"id":3}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — disconnect</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"disconnect","params":{},"id":4}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — stream_on / stream_off</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"stream_on","params":{},"id":5}'</span>
+</div></code></pre>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"stream_off","params":{},"id":6}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — takeoff</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"takeoff","params":{},"id":7}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — takeoff (스트림을 잠시 끄고 이륙 후 다시 켬)</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"takeoff","params":{"pause_stream_first":true},"id":8}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — land</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"land","params":{},"id":9}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — emergency</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"emergency","params":{},"id":10}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — rc (좌/전후/상하/요, 각 -100~100)</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"rc","params":{"lr":0,"fb":0,"ud":0,"yaw":0},"id":11}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — state</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"state","params":{},"id":12}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — battery</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"battery","params":{},"id":13}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — diagnostics</strong></p>
+<pre class="hljs"><code><div>curl -s -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"diagnostics","params":{},"id":14}'</span>
+</div></code></pre>
+<p><strong>curl 예시 — 인증 없이 호출 (401 기대)</strong></p>
+<pre class="hljs"><code><div>curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> -X POST <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/rpc"</span> \
+  -H <span class="hljs-string">"Content-Type: application/json"</span> \
+  -d <span class="hljs-string">'{"jsonrpc":"2.0","method":"ping","id":99}'</span>
+</div></code></pre>
+<hr>
+<h2 id="get-snapshotjpg">GET <code>/snapshot.jpg</code></h2>
+<p>단일 JPEG 프레임. 드론 연결 및 <code>stream_on</code> 후에만 의미 있다. 없으면 <strong>503</strong>과 본문 <code>no frame</code> 가능.</p>
+<p><strong>필수 헤더:</strong> <code>Authorization</code></p>
+<p><strong>curl 예시 (파일로 저장)</strong></p>
+<pre class="hljs"><code><div>curl -s -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/snapshot.jpg"</span> \
+  -o /tmp/tello_snapshot.jpg
+</div></code></pre>
+<p><strong>curl 예시 (HTTP 코드만 확인)</strong></p>
+<pre class="hljs"><code><div>curl -s -o /dev/null -w <span class="hljs-string">"%{http_code}\n"</span> \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/snapshot.jpg"</span>
+</div></code></pre>
+<hr>
+<h2 id="get-streammjpeg">GET <code>/stream.mjpeg</code></h2>
+<p><code>multipart/x-mixed-replace</code> MJPEG 스트림. <code>Authorization</code> 필요. 스트림이 켜져 있어야 프레임이 나온다.</p>
+<p><strong>curl 예시 (원시 스트림을 파일로, 중단은 Ctrl+C)</strong></p>
+<pre class="hljs"><code><div>curl -N -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/stream.mjpeg"</span> \
+  -o /tmp/tello_stream.mjpeg
+</div></code></pre>
+<p><strong>curl 예시 (2초만 받아 앞부분 확인, Ctrl+C로도 중단 가능)</strong></p>
+<pre class="hljs"><code><div>curl -s -N --max-time 2 \
+  -H <span class="hljs-string">"Authorization: <span class="hljs-variable">${AUTH:-tello-api-secret-change-me}</span>"</span> \
+  <span class="hljs-string">"<span class="hljs-variable">${BASE:-http://127.0.0.1:8000}</span>/stream.mjpeg"</span> | head -c 512 | xxd | head
+</div></code></pre>
+<hr>
+<h2 id="json-rpc-%EC%98%A4%EB%A5%98-%EC%BD%94%EB%93%9C-%EC%B0%B8%EA%B3%A0">JSON-RPC 오류 코드 (참고)</h2>
+<table>
+<thead>
+<tr>
+<th>code</th>
+<th>의미</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-32600</td>
+<td>잘못된 요청</td>
+</tr>
+<tr>
+<td>-32601</td>
+<td>알 수 없는 method</td>
+</tr>
+<tr>
+<td>-32602</td>
+<td>params 오류</td>
+</tr>
+<tr>
+<td>-32603</td>
+<td>내부 오류</td>
+</tr>
+<tr>
+<td>-32000</td>
+<td>드론/연결 등 (<code>not_connected</code>, Tello 응답 등)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%EC%84%9C%EB%B2%84-%EC%8B%A4%ED%96%89">서버 실행</h2>
+<pre class="hljs"><code><div><span class="hljs-built_in">cd</span> control
+uv run python -m api
+</div></code></pre>
+<p>또는</p>
+<pre class="hljs"><code><div><span class="hljs-built_in">cd</span> control
+uv run uvicorn api.main:app --host 0.0.0.0 --port 8000
+</div></code></pre>
+<p>추가 안내: <code>control/readme.txt</code>, <code>control/api/readme.txt</code></p>
+
+</body>
+</html>
