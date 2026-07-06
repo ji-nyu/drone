@@ -102,6 +102,76 @@ async function refreshDashboard() {
 
 function init_dashboard() {
   buildDroneGrid();
+  initTrashMap();
   refreshDashboard();
+  loadTrashCsv();
+
   setInterval(refreshDashboard, CONFIG.POLL_MS);
+  setInterval(loadTrashCsv, 3000);
+}
+
+function initTrashMap() {
+  const mapDiv = document.getElementById('trashMap');
+  if (!mapDiv) return;
+
+  const map = L.map('trashMap').setView([33.4996, 126.5312], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  L.marker([33.4996, 126.5312])
+    .addTo(map)
+    .bindPopup('드론 탐지 위치 예시');
+}
+
+async function loadTrashCsv() {
+  try {
+    const res = await fetch('/detection_zone_log.csv?ts=' + Date.now());
+    const text = await res.text();
+
+    const lines = text.trim().split('\n');
+    if (lines.length <= 1) return;
+
+    const rows = lines.slice(1).map(line => {
+      const cols = line.split(',');
+      return {
+        time: cols[0],
+        zone: cols[1],
+        cls: cols[2],
+        confidence: cols[3]
+      };
+    });
+
+    document.getElementById('trashTotal').textContent = rows.length;
+
+    const recent = rows[rows.length - 1];
+    document.getElementById('trashRecent').textContent = recent.cls || '-';
+
+    const zoneCount = {};
+    rows.forEach(r => {
+      if (!r.zone) return;
+      zoneCount[r.zone] = (zoneCount[r.zone] || 0) + 1;
+    });
+
+    const topZone = Object.entries(zoneCount).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById('trashTopZone').textContent = topZone ? topZone[0] : '-';
+
+    const tbody = document.getElementById('trashLogTable');
+    tbody.innerHTML = '';
+
+    rows.slice(-5).reverse().forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${r.time}</td>
+        <td>${r.zone}</td>
+        <td>${r.cls}</td>
+        <td>${r.confidence}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch (e) {
+    console.log('CSV load error:', e);
+  }
 }
