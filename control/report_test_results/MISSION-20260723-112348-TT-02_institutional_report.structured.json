@@ -1,0 +1,78 @@
+{
+  "input_data": {
+    "mission_id": "MISSION-20260723-112348-TT-02",
+    "inspection_date": "2026-07-23",
+    "inspection_area": "Jeju City Coastal Survey Area",
+    "flight_id": "TT-02-0723-1123",
+    "survey_method": "Drone-based object detection",
+    "survey_duration_minutes": 3,
+    "total_detected_count": 54,
+    "detections": [
+      {
+        "trash_type": "bottle",
+        "count": 23,
+        "zone": "B-01",
+        "average_confidence": 0.49
+      },
+      {
+        "trash_type": "bottle",
+        "count": 21,
+        "zone": "C-01",
+        "average_confidence": 0.49
+      },
+      {
+        "trash_type": "bottle",
+        "count": 10,
+        "zone": "A-01",
+        "average_confidence": 0.544
+      }
+    ],
+    "highest_density_zone": "B-01",
+    "collection_priority": null,
+    "recommended_actions": [],
+    "limitations": [],
+    "drone_id": "TT-02",
+    "recorded_at": "2026-07-23T11:27:06"
+  },
+  "narrative": {
+    "executive_summary": "2026-07-23 Jeju City Coastal Survey Area에서 드론 영상 기반 해양 쓰레기 탐지를 수행하였다. 탐지 결과 총 54개의 객체가 확인되었으며, 종류별 현황은 bottle 23개, bottle 21개, bottle 10개로 집계되었다. 본 결과는 객체 탐지 모델의 분석 결과로서 현장 확인을 통한 최종 검증이 필요하다.",
+    "overall_assessment": "전체 탐지 객체는 총 54개이며, 구역별·종류별 분포에 차이가 확인되었다. 가장 높은 밀도 구역은 B-01로 기록되었다.",
+    "zone_analysis": [
+      {
+        "zone": "B-01",
+        "analysis": "B-01에서 bottle 23개가 탐지되었으며, 평균 탐지 신뢰도는 49.0%로 기록되었다. 해당 결과는 현장 확인을 통해 최종 검증할 필요가 있다."
+      },
+      {
+        "zone": "C-01",
+        "analysis": "C-01에서 bottle 21개가 탐지되었으며, 평균 탐지 신뢰도는 49.0%로 기록되었다. 해당 결과는 현장 확인을 통해 최종 검증할 필요가 있다."
+      },
+      {
+        "zone": "A-01",
+        "analysis": "A-01에서 bottle 10개가 탐지되었으며, 평균 탐지 신뢰도는 54.4%로 기록되었다. 해당 결과는 현장 확인을 통해 최종 검증할 필요가 있다."
+      }
+    ],
+    "collection_priority": "높음",
+    "priority_basis": "탐지 총 54개, 최고 밀도 구역 B-01를 근거로 수거 우선순위를 '높음'로 판단하였다. 실제 조치 여부와 순서는 현장 접근성, 안전성 및 현장 확인 결과를 종합하여 결정해야 한다.",
+    "recommended_actions": [
+      "B-01 구역을 우선적으로 현장 확인한다.",
+      "bottle·bottle을(를) 우선 수거 대상으로 검토한다.",
+      "수거 또는 조치 전 현장 확인을 실시하고 동일 구역을 재촬영한다."
+    ],
+    "limitations": [
+      "탐지 수량은 객체 추적 기반 집계이며 현장 실물 수와 다를 수 있다.",
+      "탐지 신뢰도는 모델 점수일 뿐 현장 확정 판정이 아니다.",
+      "조치 전 현장 확인이 필요하다."
+    ],
+    "conclusion": "본 보고서는 드론 영상과 객체 탐지 결과를 기반으로 작성되었다. 탐지 수량과 위치 정보는 조사 당시 입력 데이터를 기준으로 하며, 현장 상황과 차이가 있을 수 있다. 따라서 수거 또는 행정 조치 전 현장 확인을 실시하고, 조치 완료 후 동일 구역을 재점검하는 것이 필요하다."
+  },
+  "generation_metadata": {
+    "elapsed_seconds": 0,
+    "input_tokens": 0,
+    "generated_tokens": 0,
+    "tokens_per_second": 0.0,
+    "parse_status": "sample-only",
+    "json_mode_used": false,
+    "raw_model_output": "",
+    "runtime": "template-only"
+  }
+}

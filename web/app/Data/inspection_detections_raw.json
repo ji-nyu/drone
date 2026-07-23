@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0",
+  "data_status": "prototype_sample",
+  "note": "폴리곤만 제공되어 탐지 수량·상태·시간은 기능 시연용 예시값입니다. 실제 탐지 결과로 교체하세요.",
+  "mission": {
+    "mission_id": "MISSION-20260721-001",
+    "inspection_date": "2026-07-21",
+    "inspection_area": "함덕 해수욕장 앞바다",
+    "flight_id": "TT-01-0721",
+    "survey_method": "드론 영상 기반 객체 탐지"
+  },
+  "detections": [
+    {
+      "detection_id": "DET-20260721-001",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "HAMDEOK-A01",
+      "trash_type": "플라스틱병",
+      "trash_count": 3,
+      "status": "collected",
+      "detected_at": "2026-07-21T08:30:00+09:00",
+      "status_updated_at": "2026-07-21T11:30:00+09:00",
+      "collected_at": "2026-07-21T11:30:00+09:00",
+      "average_confidence": 0.91
+    },
+    {
+      "detection_id": "DET-20260721-002",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "HAMDEOK-A02",
+      "trash_type": "비닐봉지",
+      "trash_count": 12,
+      "status": "uncollected",
+      "detected_at": "2026-07-18T09:00:00+09:00",
+      "status_updated_at": "2026-07-18T09:00:00+09:00",
+      "collected_at": null,
+      "average_confidence": 0.89
+    },
+    {
+      "detection_id": "DET-20260721-003",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "HAMDEOK-A03",
+      "trash_type": "플라스틱병",
+      "trash_count": 18,
+      "status": "uncollected",
+      "detected_at": "2026-07-16T07:40:00+09:00",
+      "status_updated_at": "2026-07-16T07:40:00+09:00",
+      "collected_at": null,
+      "average_confidence": 0.94
+    },
+    {
+      "detection_id": "DET-20260721-004",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "HAMDEOK-A04",
+      "trash_type": "캔",
+      "trash_count": 8,
+      "status": "uncollected",
+      "detected_at": "2026-07-20T10:00:00+09:00",
+      "status_updated_at": "2026-07-20T10:00:00+09:00",
+      "collected_at": null,
+      "average_confidence": 0.9
+    },
+    {
+      "detection_id": "DET-20260721-005",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "HAMDEOK-A05",
+      "trash_type": "스티로폼",
+      "trash_count": 5,
+      "status": "unverified",
+      "detected_at": "2026-07-21T12:10:00+09:00",
+      "status_updated_at": "2026-07-21T12:10:00+09:00",
+      "collected_at": null,
+      "average_confidence": 0.77
+    }
+  ]
+}

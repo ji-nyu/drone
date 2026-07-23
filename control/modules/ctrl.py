@@ -21,6 +21,7 @@ from npty.util import get_section_config
 
 from modules.yolo_detector import get_yolo_processor
 from modules.vlm_processor import get_vlm_processor
+from modules.survey_recorder import get_survey_manager
 
 API_AUTHORIZATION = "tello-api-secret-change-me"
 
@@ -190,6 +191,10 @@ class DroneController:
         self._stale_restart_sec: float = 2.0
         self._yolo_busy: bool = False
         self._yolo_last_ts: float = 0.0
+        self._yolo_ref: Any | None = None
+        self._jpeg_seq: int = 0
+        self._stale_recovery_count: int = 0
+        self._pump_started_at: float = 0.0
 
     @property
     def connected(self) -> bool:
@@ -243,30 +248,68 @@ class DroneController:
         self._acquire_or_raise_locked()
         try:
             t = self._require()
+            self._stop_frame_pump()
             self._apply_watchdog_config(_read_video_config())
             try:
                 self.apply_video_settings(_read_video_config())
             except Exception as e:  # noqa: BLE001
                 LOGGER.warning("video settings before stream_on failed host=%s: %s", self._host, e)
-            t.streamon()
             with self._frame_lock:
-                
-                self._restart_frame_reader_unlocked(t)
-            self._start_frame_pump()
-            try:
-                get_yolo_processor()
-            except Exception:  # noqa: BLE001
-                pass
-            try:
-                get_vlm_processor()
-            except Exception:  # noqa: BLE001
-                pass
-            return {"ok": True}
+                if self._frame_reader is not None:
+                    try:
+                        self._frame_reader.stop()
+                    except Exception:  # noqa: BLE001
+                        pass
+                    self._frame_reader = None
+            if getattr(t, "stream_on", False):
+                t.streamoff()
         finally:
             self._cmd_lock.release()
 
+        # YOLO/VLM·UDP 대기는 lock 밖에서 — 이 구간에 takeoff/state/battery 가 막히면 안 된다.
+        try:
+            get_yolo_processor()
+        except Exception:  # noqa: BLE001
+            pass
+        try:
+            get_vlm_processor()
+        except Exception:  # noqa: BLE001
+            pass
+        self._yolo_ref = get_yolo_processor()
+
+        self._acquire_or_raise_locked()
+        try:
+            t = self._require()
+            t.streamon()
+        finally:
+            self._cmd_lock.release()
+
+        time.sleep(2.0)
+
+        with self._frame_lock:
+            self._last_frame_signature = None
+            self._last_frame_change_ts = 0.0
+            self._same_frame_count = 0
+            self._stale_recovery_count = 0
+            t = self._tello
+            if t is not None:
+                self._restart_frame_reader_unlocked(t)
+        self._start_frame_pump()
+
+        # 스트림 시작 = 조사 세션 시작 (YOLO 탐지 → test3.py 입력 JSON)
+        if self._drone_id:
+            try:
+                mgr = get_survey_manager()
+                if mgr.auto_start_on_stream:
+                    mgr.start(self._drone_id)
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning("survey start failed drone_id=%s: %s", self._drone_id, e)
+
+        return {"ok": True}
+
     def stream_off(self) -> dict[str, Any]:
         self._acquire_or_raise_locked()
+        survey_path: str | None = None
         try:
             t = self._require()
             self._stop_frame_pump()
@@ -281,7 +324,19 @@ class DroneController:
                 self._last_frame_signature = None
                 self._last_frame_change_ts = 0.0
                 self._same_frame_count = 0
-            return {"ok": True}
+
+            if self._drone_id:
+                try:
+                    path = get_survey_manager().finish(self._drone_id)
+                    if path is not None:
+                        survey_path = str(path)
+                except Exception as e:  # noqa: BLE001
+                    LOGGER.warning("survey finish failed drone_id=%s: %s", self._drone_id, e)
+
+            out: dict[str, Any] = {"ok": True}
+            if survey_path:
+                out["survey_json"] = survey_path
+            return out
         finally:
             self._cmd_lock.release()
 
@@ -459,29 +514,33 @@ class DroneController:
     def ping(self) -> dict[str, Any]:
         return {"ok": True, "connected": self.connected, "host": self._host}
 
-    def get_frame_jpeg(self, quality: int = 80) -> bytes | None:
+    def get_frame_snapshot(self, quality: int = 80) -> tuple[bytes | None, int]:
         with self._frame_lock:
             if self._latest_jpeg is not None:
-                return self._latest_jpeg
+                return self._latest_jpeg, self._jpeg_seq
             t = self._tello
             if t is None or not getattr(t, "stream_on", False):
-                return None
+                return None, self._jpeg_seq
             if self._frame_reader is None:
                 self._frame_reader = t.get_frame_read()
             raw = self._frame_reader.frame
             if raw is None or (isinstance(raw, np.ndarray) and raw.size == 0):
-                return None
+                return None, self._jpeg_seq
             frame = np.ascontiguousarray(raw)
         ok, buf = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, int(quality)])
         if not ok:
-            return None
-        return buf.tobytes()
+            return None, self._jpeg_seq
+        return buf.tobytes(), self._jpeg_seq
+
+    def get_frame_jpeg(self, quality: int = 80) -> bytes | None:
+        jpeg, _ = self.get_frame_snapshot(quality=quality)
+        return jpeg
 
     def _submit_yolo_async(self, frame_bgr: np.ndarray) -> None:
         """YOLO 추론은 백그라운드 — 라이브 영상은 apply_overlay로 즉시 표시."""
         if self._yolo_busy:
             return
-        yolo = get_yolo_processor()
+        yolo = self._yolo_ref
         if yolo is None:
             return
         now = time.monotonic()
@@ -490,12 +549,12 @@ class DroneController:
             return
         self._yolo_last_ts = now
         self._yolo_busy = True
-        source = self._host or ""
+        source = self._drone_id or self._host or ""
         frame_copy = frame_bgr.copy()
 
         def work() -> None:
             try:
-                proc = get_yolo_processor()
+                proc = self._yolo_ref
                 if proc is not None:
                     proc.detect_and_cache(frame_copy, source=source)
             except Exception as e:  # noqa: BLE001
@@ -505,11 +564,27 @@ class DroneController:
 
         threading.Thread(target=work, daemon=True, name=f"yolo-{self._host or 'drone'}").start()
 
+    def _read_latest_frame_unlocked(self, t: Tello) -> np.ndarray | None:
+        """프레임 버퍼를 비우고 가장 최신 프레임만 반환."""
+        if self._frame_reader is None:
+            self._restart_frame_reader_unlocked(t)
+        if self._frame_reader is None:
+            return None
+        latest: np.ndarray | None = None
+        for _ in range(8):
+            raw = self._frame_reader.frame
+            if raw is not None and isinstance(raw, np.ndarray) and raw.size > 0:
+                latest = raw
+        if latest is None:
+            return None
+        return np.ascontiguousarray(latest)
+
     def _start_frame_pump(self) -> None:
         """drontest.py 처럼 백그라운드에서 프레임을 계속 읽어 JPEG 캐시를 갱신한다."""
         self._stop_frame_pump()
         self._frame_pump_stop = threading.Event()
         self._latest_jpeg = None
+        self._pump_started_at = time.monotonic()
 
         def pump() -> None:
             while not self._frame_pump_stop.is_set():
@@ -519,49 +594,68 @@ class DroneController:
                         self._frame_pump_stop.wait(0.05)
                         continue
 
-                    raw = None
                     with self._frame_lock:
-                        if self._frame_reader is None:
-                            self._restart_frame_reader_unlocked(t)
-                        if self._frame_reader is not None:
-                            raw = self._frame_reader.frame
-
-                    if raw is None or not isinstance(raw, np.ndarray) or raw.size == 0:
+                        frame = self._read_latest_frame_unlocked(t)
+                    if frame is None:
                         self._frame_pump_stop.wait(0.03)
                         continue
 
-                    frame = np.ascontiguousarray(raw)
                     now = time.monotonic()
                     signature = int(zlib.crc32(frame[::32, ::32].tobytes()))
 
+                    need_reader_restart = False
+                    need_stream_restart = False
+                    pump_age = now - self._pump_started_at
                     with self._frame_lock:
                         if self._last_frame_signature != signature:
+                            prev_sig = self._last_frame_signature
                             self._last_frame_signature = signature
                             self._last_frame_change_ts = now
                             self._same_frame_count = 0
+                            if prev_sig is not None:
+                                self._stale_recovery_count = 0
                         else:
                             self._same_frame_count += 1
                             stale_for = now - self._last_frame_change_ts
                             if (
                                 self._stale_restart_enabled
+                                and pump_age >= 5.0
                                 and self._last_frame_change_ts > 0
                                 and stale_for >= self._stale_restart_sec
                                 and self._same_frame_count >= 15
                             ):
-                                if self._restart_frame_reader_unlocked(t):
-                                    LOGGER.warning(
-                                        "frame pump stale -> reader restarted host=%s stale_for=%.2fs",
-                                        self._host,
-                                        stale_for,
-                                    )
-                                    self._frame_pump_stop.wait(0.3)
-                                    continue
+                                if self._stale_recovery_count >= 2:
+                                    need_stream_restart = True
+                                else:
+                                    need_reader_restart = True
+
+                    if need_stream_restart:
+                        if self._restart_stream_unlocked(t):
+                            LOGGER.warning(
+                                "frame pump stale -> stream restarted host=%s recovery=%s",
+                                self._host,
+                                self._stale_recovery_count,
+                            )
+                            self._stale_recovery_count = 0
+                            self._pump_started_at = time.monotonic()
+                            self._frame_pump_stop.wait(0.5)
+                            continue
+                    elif need_reader_restart:
+                        if self._restart_frame_reader_unlocked(t):
+                            self._stale_recovery_count += 1
+                            LOGGER.warning(
+                                "frame pump stale -> reader restarted host=%s count=%s",
+                                self._host,
+                                self._stale_recovery_count,
+                            )
+                            self._frame_pump_stop.wait(0.3)
+                            continue
 
                     frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
                     # drontest.py처럼 프레임을 즉시 읽고, YOLO 박스는 캐시에서 오버레이
                     frame_out = frame_bgr
-                    yolo = get_yolo_processor()
+                    yolo = self._yolo_ref
                     if yolo is not None:
                         frame_out = yolo.apply_overlay(frame_bgr)
 
@@ -569,6 +663,7 @@ class DroneController:
                     if ok:
                         with self._frame_lock:
                             self._latest_jpeg = buf.tobytes()
+                            self._jpeg_seq += 1
 
                     if self._drone_id:
                         vlm = get_vlm_processor()
@@ -614,14 +709,39 @@ class DroneController:
                     self._frame_reader.stop()
                 except Exception:  # noqa: BLE001
                     pass
+            time.sleep(0.15)
             self._frame_reader = t.get_frame_read()
-            self._last_frame_signature = None
-            self._last_frame_change_ts = time.monotonic()
             self._same_frame_count = 0
+            self._last_frame_change_ts = time.monotonic()
             return True
         except Exception as e:  # noqa: BLE001
             LOGGER.warning("frame reader restart failed host=%s err=%s", self._host, e)
             return False
+
+    def _restart_stream_unlocked(self, t: Tello) -> bool:
+        """프레임 리더 재시작만으로 복구되지 않을 때 streamoff/streamon으로 UDP 스트림을 재협상."""
+        if not self._cmd_lock.acquire(blocking=False):
+            return False
+        try:
+            if self._frame_reader is not None:
+                try:
+                    self._frame_reader.stop()
+                except Exception:  # noqa: BLE001
+                    pass
+                self._frame_reader = None
+            if getattr(t, "stream_on", False):
+                t.streamoff()
+            t.streamon()
+        except Exception as e:  # noqa: BLE001
+            LOGGER.warning("stream restart failed host=%s err=%s", self._host, e)
+            return False
+        finally:
+            self._cmd_lock.release()
+
+        time.sleep(2.0)
+        self._same_frame_count = 0
+        self._last_frame_change_ts = time.monotonic()
+        return self._restart_frame_reader_unlocked(t)
 
     def apply_video_settings(self, settings: dict[str, Any]) -> dict[str, Any]:
         """config.ini [video] 공통 설정을 현재 드론에 적용."""
@@ -909,6 +1029,9 @@ class DroneFleet:
 
     def get_frame_jpeg(self, drone_id: str, quality: int = 80) -> bytes | None:
         return self._ctrl(drone_id).get_frame_jpeg(quality=quality)
+
+    def get_frame_snapshot(self, drone_id: str, quality: int = 80) -> tuple[bytes | None, int]:
+        return self._ctrl(drone_id).get_frame_snapshot(quality=quality)
 
     def get_vlm_logs(self, drone_id: str, since_id: int = 0, limit: int = 100) -> dict[str, Any]:
         vlm = get_vlm_processor()

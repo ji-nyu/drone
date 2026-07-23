@@ -13,6 +13,8 @@ import cv2
 import numpy as np
 from npty.util import get_section_config
 
+from modules.survey_recorder import get_survey_manager
+
 LOGGER = logging.getLogger("drone.ctrl")
 
 _processor: "YoloProcessor | None" = None
@@ -92,6 +94,7 @@ class YoloProcessor:
         boxes = results[0].boxes
         cached: list[tuple[int, int, int, int, str, float]] = []
         rows: list[list[Any]] = []
+        survey_items: list[tuple[str, float, str | None, float, float]] = []
         if boxes is not None:
             frame_width = frame_bgr.shape[1]
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -101,13 +104,22 @@ class YoloProcessor:
                 conf = float(box.conf[0])
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 cached.append((x1, y1, x2, y2, cls_name, conf))
+                center_x = (x1 + x2) / 2.0
+                center_y = (y1 + y2) / 2.0
+                zone = _zone_for_center(int(center_x), frame_width)
+                survey_items.append((cls_name, conf, zone, center_x, center_y))
                 if self.csv_log:
-                    center_x = (x1 + x2) // 2
-                    zone = _zone_for_center(center_x, frame_width)
                     rows.append([now, zone, cls_name, round(conf, 3), x1, y1, x2, y2])
         with self._cache_lock:
             self._cached_boxes = cached
         self._append_csv(rows)
+        if survey_items:
+            try:
+                # source 는 보통 host IP. drone_id 가 있으면 그걸 쓰고, 없으면 source 키로 기록.
+                drone_key = source or "default"
+                get_survey_manager().record(drone_key, survey_items)
+            except Exception as e:  # noqa: BLE001
+                LOGGER.debug("survey record skipped: %s", e)
 
     def apply_overlay(self, frame_bgr: np.ndarray) -> np.ndarray:
         """마지막 탐지 결과를 현재 프레임에 빠르게 그린다 (추론 없음)."""

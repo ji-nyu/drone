@@ -48,6 +48,9 @@ const DRONE_MAP = <?= json_encode(array_column($droneList ?? [], 'ip', 'drone_id
     </a>
 
     <div class="nav-section-label">운영</div>
+    <a href="/drone/marine-trash" class="nav-item <?= ($activePage ?? '') === 'marine_trash' ? 'active' : '' ?>">
+      <span class="nav-icon">🌊</span> 해양쓰레기
+    </a>
     <a href="/drone/missions" class="nav-item <?= ($activePage ?? '') === 'missions' ? 'active' : '' ?>">
       <span class="nav-icon">≡</span> 임무 현황
       <span class="nav-badge red" id="navFlying" style="display:none">0</span>

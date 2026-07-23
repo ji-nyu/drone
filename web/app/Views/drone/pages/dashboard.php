@@ -36,18 +36,31 @@
     <div class="summary-card-value" id="trashTotal">0</div>
     <div class="summary-card-sub">CSV 누적 기준</div>
   </div>
-
   <div class="summary-card">
     <div class="summary-card-label">최근 탐지</div>
     <div class="summary-card-value" id="trashRecent">-</div>
     <div class="summary-card-sub">class</div>
   </div>
-
   <div class="summary-card">
     <div class="summary-card-label">위험 구역</div>
     <div class="summary-card-value red" id="trashTopZone">-</div>
     <div class="summary-card-sub">탐지 최다 zone</div>
   </div>
+  <div class="summary-card">
+    <div class="summary-card-label">캔</div>
+    <div class="summary-card-value red" id="trashCanCount">0</div>
+    <div class="summary-card-sub">can</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-card-label">페트병</div>
+    <div class="summary-card-value blue" id="trashBottleCount">0</div>
+    <div class="summary-card-sub">bottle</div>
+  </div>
+</div>
+
+<div style="margin-top:16px; background:white; border-radius:12px; padding:16px;">
+  <div style="font-weight:700; margin-bottom:10px;">시간대별 탐지 (can / bottle)</div>
+  <canvas id="trashTimeChart" height="100"></canvas>
 </div>
 
 <div style="margin-top:16px; background:white; border-radius:12px; padding:16px;">
@@ -55,10 +68,10 @@
   <table style="width:100%; border-collapse:collapse; font-size:13px;">
     <thead>
       <tr>
-        <th>시간</th>
-        <th>구역</th>
-        <th>종류</th>
-        <th>신뢰도</th>
+        <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">시간</th>
+        <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">구역</th>
+        <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">종류</th>
+        <th style="text-align:left;padding:6px;border-bottom:1px solid #e5e7eb">신뢰도</th>
       </tr>
     </thead>
     <tbody id="trashLogTable"></tbody>
@@ -67,5 +80,6 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
 <script>window.PAGE = 'dashboard';</script>

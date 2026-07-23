@@ -65,7 +65,7 @@ function changeDrone(id) {
 
 // ── 상태 적용 ──
 function applyStatus(d) {
-  const isOn = d.online !== false;
+  const isOn = _connected || d.online !== false;
   const connEl = document.getElementById('ctrlConn');
   if (connEl) { connEl.textContent = isOn ? '● 연결됨' : '○ 미연결'; connEl.style.color = isOn ? '#22c55e' : '#9ca3af'; }
 
@@ -99,6 +99,10 @@ function applyStatus(d) {
     const el = document.getElementById('ctrlTemp');
     if (el) el.innerHTML = `${avg}<span class="ctrl-stat-unit">°C</span>`;
     setEl('ctrlTempRange', `${d.temperature_low} / ${d.temperature_high}`);
+  } else if (d.temperature != null) {
+    const el = document.getElementById('ctrlTemp');
+    if (el) el.innerHTML = `${d.temperature}<span class="ctrl-stat-unit">°C</span>`;
+    setEl('ctrlTempRange', `${d.temperature}`);
   }
   if (d.yaw   != null) setEl('yaw', d.yaw + '°');
   if (d.pitch != null && d.roll != null) setEl('pitchRoll', `${d.pitch}° / ${d.roll}°`);
@@ -233,18 +237,19 @@ async function connectDrone() {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ drone_id: selectedDrone }),
-      signal:  AbortSignal.timeout(8000),
+      signal:  AbortSignal.timeout(15000),
     });
     const d = await res.json();
     if (!res.ok) throw new Error(d.error?.message ?? 'HTTP ' + res.status);
 
     _connected = true;
+    applyStatus({ online: true });
     btnConn.style.display = 'none';
     btnDisc.style.display = '';
     addLog('ok', `[${selectedDrone}] 스트리밍 시작`, 'logBody');
     saveLog('ok', `[${selectedDrone}] 스트리밍 시작`);
-    // streamon 직후 프레임 버퍼가 채워질 때까지 잠시 대기
-    await new Promise(r => setTimeout(r, 800));
+    // streamon + UDP 버퍼 대기(서버에서 ~2초) 후 영상 폴링 시작
+    await new Promise(r => setTimeout(r, 3000));
     tryVideo();
     startVlmPolling();
   } catch (e) {
@@ -281,9 +286,12 @@ async function disconnectDrone() {
 
 // ── 영상 (Python API 스냅샷 직접 폴링) ──
 // MJPEG <img>는 8080→8000 크로스 오리진에서 첫 프레임만 보이고 멈추는 경우가 많다.
-// test-web 과 동일하게 Python /snapshot.jpg 를 100ms 간격으로 직접 받는다.
+// test-web 과 동일하게 Python /snapshot.jpg 를 직접 받되, 요청이 겹치지 않게 순차 폴링한다.
 let _snapRunning = false;
 let _snapTimer    = null;
+let _lastFrameSeq = null;
+let _sameSeqCount = 0;
+let _streamRecoverBusy = false;
 
 function snapshotUrl() {
   const base  = (CONFIG.API_BASE || '').replace(/\/+$/, '');
@@ -299,6 +307,36 @@ function setVideoFrame(img, blob) {
   img.src = url;
 }
 
+async function recoverStream() {
+  if (_streamRecoverBusy || !_connected) return;
+  _streamRecoverBusy = true;
+  addLog('warn', `[${selectedDrone}] 영상 정지 감지 — 스트림 재시작`, 'logBody');
+  try {
+    await fetch('/api/tello/stream/off', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ drone_id: selectedDrone }),
+      signal:  AbortSignal.timeout(8000),
+    });
+    await new Promise(r => setTimeout(r, 600));
+    const res = await fetch('/api/tello/stream/on', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ drone_id: selectedDrone }),
+      signal:  AbortSignal.timeout(15000),
+    });
+    if (!res.ok) throw new Error('stream_on failed');
+    _lastFrameSeq = null;
+    _sameSeqCount = 0;
+    await new Promise(r => setTimeout(r, 2500));
+    addLog('ok', `[${selectedDrone}] 스트림 재시작 완료`, 'logBody');
+  } catch (e) {
+    addLog('error', `[${selectedDrone}] 스트림 재시작 실패: ${e.message}`, 'logBody');
+  } finally {
+    _streamRecoverBusy = false;
+  }
+}
+
 function tryVideo() {
   stopVideo();
 
@@ -308,19 +346,26 @@ function tryVideo() {
   if (!img) return;
 
   let shown = false;
-  let _snapReq = 0;
   _snapRunning = true;
+  _lastFrameSeq = null;
+  _sameSeqCount = 0;
 
-  const tick = async () => {
+  const loop = async () => {
     if (!_snapRunning || !_connected) return;
-    const reqId = ++_snapReq;
     try {
       const r = await fetch(snapshotUrl(), { cache: 'no-store', signal: AbortSignal.timeout(1500) });
-      if (!_snapRunning || reqId !== _snapReq) return;
+      if (!_snapRunning || !_connected) return;
       if (r.ok) {
+        const seq = r.headers.get('X-Frame-Seq');
         const blob = await r.blob();
-        if (!_snapRunning || reqId !== _snapReq) return;
+        if (!_snapRunning || !_connected) return;
         if (blob.size > 0) {
+          if (seq != null && seq === _lastFrameSeq) {
+            _sameSeqCount += 1;
+          } else {
+            _sameSeqCount = 0;
+            _lastFrameSeq = seq;
+          }
           setVideoFrame(img, blob);
           if (!shown) {
             shown = true;
@@ -328,18 +373,24 @@ function tryVideo() {
             if (ph)    ph.style.display    = 'none';
             if (badge) badge.style.display = 'block';
           }
+          if (_sameSeqCount === 30 && !_streamRecoverBusy) {
+            recoverStream();
+          }
         }
       }
     } catch { /* 다음 틱에서 재시도 */ }
+
+    if (_snapRunning && _connected) {
+      _snapTimer = setTimeout(loop, _sameSeqCount > 20 ? 250 : 50);
+    }
   };
 
-  tick();
-  _snapTimer = setInterval(tick, 100);
+  loop();
 }
 
 function stopVideo() {
   _snapRunning = false;
-  if (_snapTimer) { clearInterval(_snapTimer); _snapTimer = null; }
+  if (_snapTimer) { clearTimeout(_snapTimer); _snapTimer = null; }
   const img = document.getElementById('videoFeed');
   const ph  = document.getElementById('videoPh');
   if (img) {
@@ -353,17 +404,53 @@ function stopVideo() {
 }
 
 // ── API 폴링 ──
+function liveStateUrl() {
+  const base = (CONFIG.API_BASE || '').replace(/\/+$/, '');
+  return `${base}/drones/${encodeURIComponent(selectedDrone)}/state`;
+}
+
 async function pollControl() {
+  let merged = { online: _connected };
+
   try {
-    const res  = await fetch(`/api/drones/${selectedDrone}/status`, {
+    const res = await fetch(`/api/drones/${encodeURIComponent(selectedDrone)}/status`, {
       signal: AbortSignal.timeout(900),
     });
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    applyStatus({ online: json.online, ...( json.telemetry ?? {}) });
-  } catch {
-    applyStatus({ online: false });
+    if (res.ok) {
+      const json = await res.json();
+      merged = { online: _connected || json.online, ...(json.telemetry ?? {}) };
+    }
+  } catch { /* DB 텔레메트리 실패 시 Python API 로 폴백 */ }
+
+  if (_connected) {
+    try {
+      const res = await fetch(liveStateUrl(), {
+        cache: 'no-store',
+        headers: { Authorization: CONFIG.API_TOKEN || '' },
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const st = await res.json();
+        merged.online = true;
+        if (st.bat != null) merged.battery = Number(st.bat);
+        const altCm = st.h != null ? Number(st.h) : (st.tof != null ? Number(st.tof) : null);
+        if (altCm != null) merged.altitude = Math.round(altCm / 100);
+        if (st.templ != null && st.temph != null) {
+          merged.temperature_low  = Number(st.templ);
+          merged.temperature_high = Number(st.temph);
+        }
+        if (st.vgx != null || st.vgy != null || st.vgz != null) {
+          const vx = Number(st.vgx ?? 0), vy = Number(st.vgy ?? 0), vz = Number(st.vgz ?? 0);
+          merged.speed = Math.round(Math.sqrt(vx * vx + vy * vy + vz * vz));
+        }
+        if (st.yaw  != null) merged.yaw   = Number(st.yaw);
+        if (st.pitch != null) merged.pitch = Number(st.pitch);
+        if (st.roll  != null) merged.roll  = Number(st.roll);
+      }
+    } catch { /* 다음 폴링에서 재시도 */ }
   }
+
+  applyStatus(merged);
 }
 
 // ── DB 로그 저장 / 조회 ──

@@ -1,0 +1,86 @@
+{
+  "input_data": {
+    "mission_id": "MISSION-20260722-140118-TT-02",
+    "inspection_date": "2026-07-22",
+    "inspection_area": "Jeju City Coastal Survey Area",
+    "flight_id": "TT-02-0722-1401",
+    "survey_method": "Drone-based object detection",
+    "survey_duration_minutes": 2,
+    "total_detected_count": 32,
+    "detections": [
+      {
+        "trash_type": "net",
+        "count": 11,
+        "zone": "B-01",
+        "average_confidence": 0.462
+      },
+      {
+        "trash_type": "fishing_item",
+        "count": 8,
+        "zone": "B-01",
+        "average_confidence": 0.454
+      },
+      {
+        "trash_type": "bottle_cap",
+        "count": 6,
+        "zone": "B-01",
+        "average_confidence": 0.426
+      },
+      {
+        "trash_type": "bottle",
+        "count": 5,
+        "zone": "B-01",
+        "average_confidence": 0.442
+      },
+      {
+        "trash_type": "packet",
+        "count": 2,
+        "zone": "B-01",
+        "average_confidence": 0.645
+      }
+    ],
+    "highest_density_zone": "B-01",
+    "collection_priority": null,
+    "recommended_actions": [],
+    "limitations": [],
+    "drone_id": "TT-02",
+    "recorded_at": "2026-07-22T14:03:41"
+  },
+  "narrative": {
+    "executive_summary": "2026년 7월 22일 제주 해안 조사 구역(Jeju City Coastal Survey Area)에서 드론 기반 객체 탐지를 통해 총 32개의 해양 쓰레기가 탐지되었습니다. 특히 구역 B-01에서 가장 높은 밀도를 보였으며, 주요 쓰레기 유형으로는 그물(net), 어업 관련 물품(fishing item), 병뚜껑(bottle cap), 병(bottle), 포장재(packet) 등이 확인되었습니다.",
+    "overall_assessment": "조사 결과, 제주 해안의 특정 구역에서 다양한 종류의 해양 쓰레기가 집중적으로 발견되었습니다. 이는 해양 환경 보호를 위한 지속적인 모니터링과 청소 활동의 필요성을 시사합니다. 특히 높은 탐지 신뢰도를 가진 구역 B-01에 대한 주의가 요구됩니다.",
+    "collection_priority": "중간",
+    "priority_basis": "구역 B-01에서 가장 높은 밀도의 쓰레기가 탐지되었으며, 다양한 유형의 쓰레기가 확인됨에 따라 우선적인 수거와 환경 영향 평가가 필요합니다. 그러나 현장 확인 없이 단정하기는 어렵기 때문에 중간 우선순위를 부여하였습니다.",
+    "conclusion": "이번 조사 결과는 제주 해안 특히 구역 B-01에서 해양 쓰레기 문제의 심각성을 보여주고 있습니다. 지속적인 모니터링과 함께 현장 확인을 통한 보다 정확한 분석이 필요하며, 이를 바탕으로 효과적인 청소 및 예방 활동을 추진해야 할 것입니다.",
+    "zone_analysis": [
+      {
+        "zone": "B-01",
+        "analysis": "구역 B-01에서 가장 높은 밀도의 해양 쓰레기(총 32개 중 약 97%)가 탐지되었습니다. 그물, 어업 관련 물품, 병뚜껑, 병, 포장재 등 다양한 유형의 쓰레기가 확인되어 이 지역의 환경 문제에 대한 심층적인 조사와 청소 활동이 필요합니다."
+      }
+    ],
+    "recommended_actions": [
+      "구역 B-01에 대한 추가 현장 조사 실시",
+      "쓰레기 유형별 수거 계획 수립 및 실행",
+      "지역 주민과 협력하여 해양 쓰레기 감소 캠페인 진행"
+    ],
+    "limitations": [
+      "드론 기반 탐지의 신뢰도가 0.4 이상인 경우를 기준으로 분석되었으며, 이는 현장 확정 판정보다는 추정에 가깝습니다.",
+      "조사 시간이 2분으로 짧아 전체 해안 지역의 쓰레기 분포를 완벽하게 파악하기에는 한계가 있습니다."
+    ]
+  },
+  "generation_metadata": {
+    "elapsed_seconds": 121.3,
+    "input_tokens": 1078,
+    "generated_tokens": 577,
+    "tokens_per_second": 4.76,
+    "parse_status": "success",
+    "json_mode_used": true,
+    "finish_reason": "stop",
+    "raw_model_output": "{\n  \"executive_summary\": \"2026년 7월 22일 제주 해안 조사 구역(Jeju City Coastal Survey Area)에서 드론 기반 객체 탐지를 통해 총 32개의 해양 쓰레기가 탐지되었습니다. 특히 구역 B-01에서 가장 높은 밀도를 보였으며, 주요 쓰레기 유형으로는 그물(net), 어업 관련 물품(fishing item), 병뚜껑(bottle cap), 병(bottle), 포장재(packet) 등이 확인되었습니다.\",\n  \"overall_assessment\": \"조사 결과, 제주 해안의 특정 구역에서 다양한 종류의 해양 쓰레기가 집중적으로 발견되었습니다. 이는 해양 환경 보호를 위한 지속적인 모니터링과 청소 활동의 필요성을 시사합니다. 특히 높은 탐지 신뢰도를 가진 구역 B-01에 대한 주의가 요구됩니다.\",\n  \"zone_analysis\": [\n    {\n      \"zone\": \"B-01\",\n      \"analysis\": \"구역 B-01에서 가장 높은 밀도의 해양 쓰레기(총 32개 중 약 97%)가 탐지되었습니다. 그물, 어업 관련 물품, 병뚜껑, 병, 포장재 등 다양한 유형의 쓰레기가 확인되어 이 지역의 환경 문제에 대한 심층적인 조사와 청소 활동이 필요합니다.\"\n    }\n  ],\n  \"collection_priority\": \"중간\",\n  \"priority_basis\": \"구역 B-01에서 가장 높은 밀도의 쓰레기가 탐지되었으며, 다양한 유형의 쓰레기가 확인됨에 따라 우선적인 수거와 환경 영향 평가가 필요합니다. 그러나 현장 확인 없이 단정하기는 어렵기 때문에 중간 우선순위를 부여하였습니다.\",\n  \"recommended_actions\": [\n    \"구역 B-01에 대한 추가 현장 조사 실시\",\n    \"쓰레기 유형별 수거 계획 수립 및 실행\",\n    \"지역 주민과 협력하여 해양 쓰레기 감소 캠페인 진행\"\n  ],\n  \"limitations\": [\n    \"드론 기반 탐지의 신뢰도가 0.4 이상인 경우를 기준으로 분석되었으며, 이는 현장 확정 판정보다는 추정에 가깝습니다.\",\n    \"조사 시간이 2분으로 짧아 전체 해안 지역의 쓰레기 분포를 완벽하게 파악하기에는 한계가 있습니다.\"\n  ],\n  \"conclusion\": \"이번 조사 결과는 제주 해안 특히 구역 B-01에서 해양 쓰레기 문제의 심각성을 보여주고 있습니다. 지속적인 모니터링과 함께 현장 확인을 통한 보다 정확한 분석이 필요하며, 이를 바탕으로 효과적인 청소 및 예방 활동을 추진해야 할 것입니다.\"\n}",
+    "runtime": "llama-cpp-python",
+    "model_path": "D:\\model\\EXAONE-3.5-7.8B-Q4\\EXAONE-3.5-7.8B-Instruct-Q4_K_M.gguf",
+    "n_gpu_layers": 20,
+    "n_ctx": 4096,
+    "n_batch": 128
+  }
+}

@@ -29,9 +29,96 @@ class Drone extends BaseController
              . view('drone/layout/footer');
     }
 
+    private function loadJsonFile(string $path, array $default): array
+    {
+        if (!is_file($path)) {
+            return $default;
+        }
+
+        $json = file_get_contents($path);
+        if ($json === false) {
+            return $default;
+        }
+
+        $data = json_decode($json, true);
+        return is_array($data) ? $data : $default;
+    }
+
     public function index(): string
     {
         return $this->render('dashboard', '대시보드', '▦', 'dashboard');
+    }
+
+    public function marineTrash(): string
+    {
+        $marineZonesDefault = [
+            'map_center' => [
+                'latitude' => 33.5455,
+                'longitude' => 126.6698,
+                'zoom' => 14,
+            ],
+            'zones' => [],
+        ];
+
+        $inspectionDetectionsDefault = [
+            'mission' => [],
+            'detections' => [],
+        ];
+
+        $zoneRiskSummaryDefault = [
+            'zones' => [],
+            'top3' => [],
+            'report_summary' => [],
+        ];
+
+        $marineZones = $this->loadJsonFile(APPPATH . 'Data/marine_zones_fixed.json', $marineZonesDefault);
+        $inspectionDetections = $this->loadJsonFile(APPPATH . 'Data/inspection_detections_raw.json', $inspectionDetectionsDefault);
+        $zoneRiskSummary = $this->loadJsonFile(APPPATH . 'Data/zone_risk_summary.json', $zoneRiskSummaryDefault);
+
+        return $this->render(
+            'marine_trash',
+            '해양쓰레기',
+            '🌊',
+            'marine_trash',
+            [
+                'marineZones' => $marineZones,
+                'inspectionDetections' => $inspectionDetections,
+                'zoneRiskSummary' => $zoneRiskSummary,
+            ]
+        );
+    }
+
+    public function marineTrashData()
+    {
+        $marineZonesDefault = [
+            'map_center' => [
+                'latitude' => 33.5455,
+                'longitude' => 126.6698,
+                'zoom' => 14,
+            ],
+            'zones' => [],
+        ];
+
+        $inspectionDetectionsDefault = [
+            'mission' => [],
+            'detections' => [],
+        ];
+
+        $zoneRiskSummaryDefault = [
+            'zones' => [],
+            'top3' => [],
+            'report_summary' => [],
+        ];
+
+        $marineZones = $this->loadJsonFile(APPPATH . 'Data/marine_zones_fixed.json', $marineZonesDefault);
+        $inspectionDetections = $this->loadJsonFile(APPPATH . 'Data/inspection_detections_raw.json', $inspectionDetectionsDefault);
+        $zoneRiskSummary = $this->loadJsonFile(APPPATH . 'Data/zone_risk_summary.json', $zoneRiskSummaryDefault);
+
+        return $this->response->setJSON([
+            'fixed' => $marineZones,
+            'detection' => $inspectionDetections,
+            'risk' => $zoneRiskSummary,
+        ]);
     }
 
     public function control(): string

@@ -36,6 +36,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Frame-Seq"],
 )
 
 _executor = ThreadPoolExecutor(max_workers=6, thread_name_prefix="tello")
@@ -75,9 +76,17 @@ TEST_WEB_LOGGER = _setup_test_web_logger()
 
 def _safe_jpeg(drone_id: str) -> bytes | None:
     try:
-        return fleet.get_frame_jpeg(drone_id, quality=80)
+        jpeg, _ = fleet.get_frame_snapshot(drone_id, quality=80)
+        return jpeg
     except RuntimeError:
         return None
+
+
+def _safe_jpeg_with_seq(drone_id: str) -> tuple[bytes | None, int]:
+    try:
+        return fleet.get_frame_snapshot(drone_id, quality=80)
+    except RuntimeError:
+        return None, 0
 
 
 async def _run_blocking(func):
@@ -214,12 +223,12 @@ async def drone_rc_by_id(drone_id: str, body: RcRequest) -> dict:
     return await _run_blocking(lambda: fleet.rc(drone_id, body.lr, body.fb, body.ud, body.yaw))
 
 
-@app.get("/drones/{drone_id}/state", dependencies=[Depends(verify_authorization)], summary="드론 상태 조회")
+@app.get("/drones/{drone_id}/state", dependencies=[Depends(verify_authorization_flexible)], summary="드론 상태 조회")
 async def drone_state_by_id(drone_id: str) -> dict:
     return await _run_blocking(lambda: fleet.state(drone_id))
 
 
-@app.get("/drones/{drone_id}/battery", dependencies=[Depends(verify_authorization)], summary="배터리 조회")
+@app.get("/drones/{drone_id}/battery", dependencies=[Depends(verify_authorization_flexible)], summary="배터리 조회")
 async def drone_battery_by_id(drone_id: str) -> dict:
     return await _run_blocking(lambda: fleet.battery(drone_id))
 
@@ -240,7 +249,9 @@ async def vlm_logs_by_id(
 
 @app.get("/drones/{drone_id}/snapshot.jpg", dependencies=[Depends(verify_authorization_flexible)], summary="현재 프레임 JPEG 1장")
 async def snapshot_jpg_by_id(drone_id: str) -> Response:
-    jpeg = await asyncio.get_running_loop().run_in_executor(_executor, lambda: _safe_jpeg(drone_id))
+    jpeg, seq = await asyncio.get_running_loop().run_in_executor(
+        _executor, lambda: _safe_jpeg_with_seq(drone_id)
+    )
     if not jpeg:
         return Response(status_code=503, content=b"no frame", media_type="text/plain")
     return Response(
@@ -250,6 +261,7 @@ async def snapshot_jpg_by_id(drone_id: str) -> Response:
             "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
             "Pragma": "no-cache",
             "Expires": "0",
+            "X-Frame-Seq": str(seq),
         },
     )
 

@@ -9,6 +9,8 @@ use CodeIgniter\Router\RouteCollection;
 // ── 웹 페이지 ────────────────────────────────────
 $routes->get('/',               'Drone::index');
 $routes->get('drone',           'Drone::index');
+$routes->get('drone/marine-trash', 'Drone::marineTrash');
+$routes->get('drone/marine-trash-data', 'Drone::marineTrashData');
 $routes->get('drone/control',   'Drone::control');
 $routes->get('drone/missions',  'Drone::missions');
 $routes->get('drone/logs',      'Drone::logs');
@@ -53,6 +55,14 @@ $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes)
     $routes->get('logs',          'Logs::index');
     $routes->post('logs',         'Logs::create');
     $routes->post('logs/clear',   'Logs::clear');
+
+    // 해양 구역
+    $routes->post('marine-zones', 'MarineZones::create');
+    $routes->get('marine-zones',  'MarineZones::index');
+
+    // 조사 Word 보고서 (test3.py)
+    $routes->post('reports/generate',           'Reports::generate');
+    $routes->get('reports/download/(:segment)', 'Reports::download/$1');
 
     // 환경설정
     $routes->get('settings/tello',  'EnvSettings::getTello');
