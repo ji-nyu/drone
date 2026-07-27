@@ -1,137 +1,139 @@
 {
-  "schema_version": "1.0",
-  "generated_at": "2026-07-21T15:00:00+09:00",
-  "calculation_policy": {
-    "formula": "risk_score = count_score * 0.7 + delay_score * 0.3",
-    "count_score": "min(trash_count / 20 * 100, 100)",
-    "delay_score": "uncollected 상태일 때 min(uncollected_hours / 120 * 100, 100)",
-    "unverified_penalty": 15,
-    "levels": {
-      "danger": {
-        "min_score": 70,
-        "color": "#ef4444"
-      },
-      "warning": {
-        "min_score": 40,
-        "max_score": 69,
-        "color": "#facc15"
-      },
-      "normal": {
-        "min_score": 0,
-        "max_score": 39,
-        "color": "#22c55e"
-      }
+    "schema_version": "1.0",
+    "generated_at": "2026-07-21T15:00:00+09:00",
+    "calculation_policy": {
+        "formula": "risk_score = count_score * 0.7 + delay_score * 0.3",
+        "count_score": "min(trash_count / 20 * 100, 100)",
+        "delay_score": "uncollected 상태일 때 min(uncollected_hours / 120 * 100, 100)",
+        "unverified_penalty": 15,
+        "levels": {
+            "danger": {
+                "min_score": 70,
+                "color": "#ef4444"
+            },
+            "warning": {
+                "min_score": 40,
+                "max_score": 69,
+                "color": "#facc15"
+            },
+            "normal": {
+                "min_score": 0,
+                "max_score": 39,
+                "color": "#22c55e"
+            }
+        }
+    },
+    "zones": [
+        {
+            "zone_id": "HAMDEOK-A01",
+            "trash_count": 3,
+            "main_trash_type": "플라스틱병",
+            "status": "collected",
+            "detected_at": "2026-07-21T08:30:00+09:00",
+            "uncollected_hours": 0,
+            "count_score": 15,
+            "delay_score": 0,
+            "risk_score": 10,
+            "risk_level": "normal",
+            "map_color": "#22c55e",
+            "recommended_action": "수거 완료 구역 재점검 및 상태 확인"
+        },
+        {
+            "zone_id": "HAMDEOK-A02",
+            "trash_count": 12,
+            "main_trash_type": "비닐봉지",
+            "status": "uncollected",
+            "detected_at": "2026-07-18T09:00:00+09:00",
+            "uncollected_hours": 78,
+            "count_score": 60,
+            "delay_score": 65,
+            "risk_score": 62,
+            "risk_level": "warning",
+            "map_color": "#facc15",
+            "recommended_action": "24시간 이내 현장 확인 및 수거 계획 수립"
+        },
+        {
+            "zone_id": "HAMDEOK-A03",
+            "trash_count": 18,
+            "main_trash_type": "플라스틱병",
+            "status": "uncollected",
+            "detected_at": "2026-07-16T07:40:00+09:00",
+            "uncollected_hours": 127.3,
+            "count_score": 90,
+            "delay_score": 100,
+            "risk_score": 93,
+            "risk_level": "danger",
+            "map_color": "#ef4444",
+            "recommended_action": "즉시 현장 확인 및 우선 수거"
+        },
+        {
+            "zone_id": "HAMDEOK-A04",
+            "trash_count": 8,
+            "main_trash_type": "캔",
+            "status": "uncollected",
+            "detected_at": "2026-07-20T10:00:00+09:00",
+            "uncollected_hours": 29,
+            "count_score": 40,
+            "delay_score": 24.2,
+            "risk_score": 35,
+            "risk_level": "normal",
+            "map_color": "#22c55e",
+            "recommended_action": "정기 모니터링 유지"
+        },
+        {
+            "zone_id": "HAMDEOK-A05",
+            "trash_count": 5,
+            "main_trash_type": "스티로폼",
+            "status": "collecting",
+            "detected_at": "2026-07-21T12:10:00+09:00",
+            "uncollected_hours": 0,
+            "count_score": 25,
+            "delay_score": 0,
+            "risk_score": 32,
+            "risk_level": "normal",
+            "map_color": "#22c55e",
+            "recommended_action": "수거 작업 진행 상황 모니터링"
+        }
+    ],
+    "top3": [
+        {
+            "rank": 1,
+            "zone_id": "HAMDEOK-A03",
+            "risk_score": 93,
+            "risk_level": "danger",
+            "trash_count": 18,
+            "main_trash_type": "플라스틱병"
+        },
+        {
+            "rank": 2,
+            "zone_id": "HAMDEOK-A02",
+            "risk_score": 62,
+            "risk_level": "warning",
+            "trash_count": 12,
+            "main_trash_type": "비닐봉지"
+        },
+        {
+            "rank": 3,
+            "zone_id": "HAMDEOK-A04",
+            "risk_score": 35,
+            "risk_level": "normal",
+            "trash_count": 8,
+            "main_trash_type": "캔"
+        }
+    ],
+    "report_summary": {
+        "total_zone_count": 5,
+        "total_detected_count": 46,
+        "danger_zone_count": 1,
+        "warning_zone_count": 1,
+        "normal_zone_count": 3,
+        "highest_risk_zone": "HAMDEOK-A03",
+        "recommended_actions": [
+            "즉시 현장 확인 및 우선 수거",
+            "24시간 이내 현장 확인 및 수거 계획 수립",
+            "정기 모니터링 유지",
+            "수거 작업 진행 상황 모니터링",
+            "수거 완료 구역 재점검 및 상태 확인"
+        ]
     }
-  },
-  "zones": [
-    {
-      "zone_id": "HAMDEOK-A01",
-      "trash_count": 3,
-      "main_trash_type": "플라스틱병",
-      "status": "collected",
-      "detected_at": "2026-07-21T08:30:00+09:00",
-      "uncollected_hours": 0,
-      "count_score": 15.0,
-      "delay_score": 0,
-      "risk_score": 10,
-      "risk_level": "normal",
-      "map_color": "#22c55e",
-      "recommended_action": "수거 완료 구역 재촬영 및 상태 확인"
-    },
-    {
-      "zone_id": "HAMDEOK-A02",
-      "trash_count": 12,
-      "main_trash_type": "비닐봉지",
-      "status": "uncollected",
-      "detected_at": "2026-07-18T09:00:00+09:00",
-      "uncollected_hours": 78.0,
-      "count_score": 60.0,
-      "delay_score": 65.0,
-      "risk_score": 62,
-      "risk_level": "warning",
-      "map_color": "#facc15",
-      "recommended_action": "24시간 이내 현장 확인 및 수거 계획 수립"
-    },
-    {
-      "zone_id": "HAMDEOK-A03",
-      "trash_count": 18,
-      "main_trash_type": "플라스틱병",
-      "status": "uncollected",
-      "detected_at": "2026-07-16T07:40:00+09:00",
-      "uncollected_hours": 127.3,
-      "count_score": 90.0,
-      "delay_score": 100,
-      "risk_score": 93,
-      "risk_level": "danger",
-      "map_color": "#ef4444",
-      "recommended_action": "즉시 현장 확인 및 우선 수거"
-    },
-    {
-      "zone_id": "HAMDEOK-A04",
-      "trash_count": 8,
-      "main_trash_type": "캔",
-      "status": "uncollected",
-      "detected_at": "2026-07-20T10:00:00+09:00",
-      "uncollected_hours": 29.0,
-      "count_score": 40.0,
-      "delay_score": 24.2,
-      "risk_score": 35,
-      "risk_level": "normal",
-      "map_color": "#22c55e",
-      "recommended_action": "정기 모니터링 유지"
-    },
-    {
-      "zone_id": "HAMDEOK-A05",
-      "trash_count": 5,
-      "main_trash_type": "스티로폼",
-      "status": "unverified",
-      "detected_at": "2026-07-21T12:10:00+09:00",
-      "uncollected_hours": 0,
-      "count_score": 25.0,
-      "delay_score": 0,
-      "risk_score": 32,
-      "risk_level": "normal",
-      "map_color": "#22c55e",
-      "recommended_action": "정기 모니터링 유지"
-    }
-  ],
-  "top3": [
-    {
-      "rank": 1,
-      "zone_id": "HAMDEOK-A03",
-      "risk_score": 93,
-      "risk_level": "danger",
-      "trash_count": 18,
-      "main_trash_type": "플라스틱병"
-    },
-    {
-      "rank": 2,
-      "zone_id": "HAMDEOK-A02",
-      "risk_score": 62,
-      "risk_level": "warning",
-      "trash_count": 12,
-      "main_trash_type": "비닐봉지"
-    },
-    {
-      "rank": 3,
-      "zone_id": "HAMDEOK-A04",
-      "risk_score": 35,
-      "risk_level": "normal",
-      "trash_count": 8,
-      "main_trash_type": "캔"
-    }
-  ],
-  "report_summary": {
-    "total_zone_count": 5,
-    "total_detected_count": 46,
-    "danger_zone_count": 1,
-    "warning_zone_count": 1,
-    "normal_zone_count": 3,
-    "highest_risk_zone": "HAMDEOK-A03",
-    "recommended_actions": [
-      "HAMDEOK-A03: 즉시 현장 확인 및 우선 수거",
-      "HAMDEOK-A02: 24시간 이내 현장 확인 및 수거 계획 수립",
-      "HAMDEOK-A04: 정기 모니터링 유지"
-    ]
-  }
 }

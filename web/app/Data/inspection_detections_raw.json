@@ -64,7 +64,7 @@
       "zone_id": "HAMDEOK-A05",
       "trash_type": "스티로폼",
       "trash_count": 5,
-      "status": "unverified",
+      "status": "collecting",
       "detected_at": "2026-07-21T12:10:00+09:00",
       "status_updated_at": "2026-07-21T12:10:00+09:00",
       "collected_at": null,

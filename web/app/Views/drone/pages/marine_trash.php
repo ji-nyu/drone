@@ -2,7 +2,7 @@
 
     <div class="page-section-title">
         <h2>해양쓰레기 위험 구역 지도</h2>
-        <p>구역별 해양쓰레기 위험도와 미수거 현황을 확인합니다.</p>
+        <p>구역별 해양쓰레기 위험도와 수거 대기 현황을 확인합니다.</p>
     </div>
 
     <section class="marine-summary-grid">
@@ -37,7 +37,7 @@
                 <h3>위험 구역 통계 요약</h3>
                 <button type="button" id="btnGenerateReport" class="btn primary marine-report-btn">보고서 생성</button>
             </div>
-            <p class="marine-note">※ 현재 통계는 플랫폼 기능 검증을 위한 예시 탐지 데이터를 사용합니다.</p>
+            <p class="marine-note">※ 위험도와 알림은 zone_risk_summary.json 기준으로 자동 반영됩니다.</p>
             <p id="reportGenStatus" class="marine-report-status" aria-live="polite"></p>
         </div>
 
@@ -56,7 +56,7 @@
                         <th>구역명</th>
                         <th>탐지량</th>
                         <th>주요 쓰레기</th>
-                        <th>미수거 시간</th>
+                        <th>수거 대기 시간</th>
                         <th>위험도</th>
                         <th>등급</th>
                         <th>상태</th>
@@ -87,6 +87,27 @@
             </div>
 
             <div id="marineTrashMap"></div>
+
+            <div class="collection-route-card">
+                <div class="collection-route-header">
+                    <h3>최단 수거 경로</h3>
+                    <p>수거 지점 JSON 기준으로 최단 경로를 계산합니다.</p>
+                </div>
+                <div class="collection-route-controls">
+                    <label>
+                        <span>시작 지점</span>
+                        <select id="collectionRouteStart"></select>
+                    </label>
+                    <label>
+                        <span>도착 지점</span>
+                        <select id="collectionRouteEnd"></select>
+                    </label>
+                    <button type="button" id="btnCalculateCollectionRoute" onclick="window.calculateCollectionRoute && window.calculateCollectionRoute();">경로 계산</button>
+                    <button type="button" id="btnResetCollectionRoute" onclick="window.resetCollectionRouteUi && window.resetCollectionRouteUi();">경로 초기화</button>
+                </div>
+                <div id="collectionRouteResult" class="collection-route-result">수거 지점을 불러온 뒤 경로를 계산할 수 있습니다.</div>
+                <div id="collectionRouteError" class="collection-route-error" style="display:none;"></div>
+            </div>
         </div>
 
         <aside class="marine-side-column">
@@ -107,10 +128,8 @@
                 </div>
                 <div id="automaticReport" class="marine-report-card">
                     <p id="reportGeneratedAt" class="report-generated">보고서 생성일: 정보 없음</p>
-                    <ul id="reportActions" class="report-actions-list">
-                        <li>권장 조치가 없습니다.</li>
-                    </ul>
-                    <p id="reportNotes" class="report-notes"></p>
+                    <p id="reportSummaryText" class="report-notes"></p>
+                    <ul id="reportActions" class="report-actions-list"></ul>
                 </div>
             </div>
 
@@ -118,18 +137,7 @@
                 <div class="marine-card-header">
                     <h3>경고·알림 목록</h3>
                 </div>
-
-                <div class="marine-alert danger-alert">
-                    <strong>긴급 알림</strong>
-                    <p>함덕 A구역이 고위험 단계로 변경되었습니다.</p>
-                    <small>미수거 쓰레기 18개 · 수거 경로 생성 권장</small>
-                </div>
-
-                <div class="marine-alert warning-alert">
-                    <strong>증가 알림</strong>
-                    <p>함덕 C구역의 탐지량이 25% 증가했습니다.</p>
-                    <small>추가 순찰을 권장합니다.</small>
-                </div>
+                <div id="alertList"></div>
             </div>
 
         </aside>
@@ -548,29 +556,133 @@
     font-size: 12px;
 }
 
-.danger-alert {
+.collection-route-card {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #e7ebf0;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+
+.collection-route-header h3 {
+    margin: 0 0 4px;
+    font-size: 16px;
+}
+
+.collection-route-header p {
+    margin: 0 0 10px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.collection-route-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: end;
+}
+
+.collection-route-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    color: #475569;
+}
+
+.collection-route-controls select,
+.collection-route-controls button {
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+.collection-route-controls button {
+    background: #2563eb;
+    color: #fff;
+    cursor: pointer;
+}
+
+.collection-route-controls button:last-child {
+    background: #64748b;
+}
+
+.collection-route-result {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.collection-route-error {
+    margin-top: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
     background: #fff2f2;
-    border: 1px solid #ffcaca;
+    color: #b91c1c;
+    font-size: 13px;
 }
 
-.warning-alert {
-    background: #fff9e8;
-    border: 1px solid #ffe29a;
+.collection-point-marker {
+    background: #2563eb;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    font-size: 13px;
 }
 
-.danger-text {
-    color: #ef4444;
+.collection-point-marker.start {
+    background: #22c55e;
 }
 
-.warning-text {
-    color: #e6a700;
+.collection-point-marker.end {
+    background: #ef4444;
 }
 
-.success-text {
-    color: #22a559;
+.collection-point-marker.intermediate {
+    background: #2563eb;
 }
 
-@media (max-width: 1100px) {
+.collection-route-visit-badge {
+    margin-top: 4px;
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 11px;
+}
+
+    .alert-danger {
+        background: #fff2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .alert-warning {
+        background: #fff9e8;
+        border: 1px solid #fde68a;
+    }
+
+    .alert-unverified {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+    }
+
+    .alert-delay {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
     .marine-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -637,10 +749,437 @@
         const fixedZoneLayer = new L.FeatureGroup();
         map.addLayer(fixedZoneLayer);
 
+        const zoneInfoById = new Map((marineZonesData.zones ?? []).map(zone => [zone.zone_id, zone]));
         const riskByZoneId = new Map((zoneRiskData.zones ?? []).map(item => [item.zone_id, item]));
 
         // track fixed zone ids to avoid duplicating in drawItems
         const fixedZoneIds = new Set();
+        window.collectionPoints = [];
+        window.collectionMarkers = {};
+        window.collectionRouteLayer = null;
+        window.collectionRouteArrows = [];
+
+        const collectionRoutePane = map.createPane('collectionPointPane');
+        collectionRoutePane.style.zIndex = 650;
+
+        const setCollectionRouteError = (message) => {
+            const errorEl = document.getElementById('collectionRouteError');
+            if (!errorEl) return;
+            if (message) {
+                errorEl.style.display = 'block';
+                errorEl.textContent = message;
+            } else {
+                errorEl.style.display = 'none';
+                errorEl.textContent = '';
+            }
+        };
+
+        const isPointInPolygon = (point, polygonLayer) => {
+            if (!point || !polygonLayer) return false;
+            const latlngs = polygonLayer.getLatLngs ? polygonLayer.getLatLngs() : [];
+            const flat = Array.isArray(latlngs) ? latlngs.flatMap((entry) => Array.isArray(entry) ? entry : [entry]) : [];
+            if (flat.length === 0) return false;
+
+            let inside = false;
+            for (let i = 0, j = flat.length - 1; i < flat.length; j = i++) {
+                const xi = flat[i].lng;
+                const yi = flat[i].lat;
+                const xj = flat[j].lng;
+                const yj = flat[j].lat;
+                const intersect = ((yi > point.lat) !== (yj > point.lat)) && (point.lng < ((xj - xi) * (point.lat - yi) / (yj - yi) + xi));
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        };
+
+        const calculateDistance = (pointA, pointB) => {
+            return L.latLng(pointA.lat, pointA.lng).distanceTo([pointB.lat, pointB.lng]);
+        };
+
+        const generatePermutations = (items) => {
+            if (!Array.isArray(items) || items.length === 0) return [];
+            if (items.length === 1) return [items];
+            const results = [];
+            items.forEach((item, index) => {
+                const rest = items.slice(0, index).concat(items.slice(index + 1));
+                generatePermutations(rest).forEach((perm) => results.push([item].concat(perm)));
+            });
+            return results;
+        };
+
+       const findShortestCollectionRoute = (points, startId, endId) => {
+    const numericStartId = Number(startId);
+    const numericEndId = Number(endId);
+
+    const startPoint = (points || []).find(
+        (point) => Number(point.id) === numericStartId
+    );
+
+    const endPoint = (points || []).find(
+        (point) => Number(point.id) === numericEndId
+    );
+
+    if (!startPoint || !endPoint) {
+        console.error('시작점 또는 도착점을 찾을 수 없습니다.', {
+            startId,
+            endId,
+            points
+        });
+
+        return {
+            route: [],
+            totalDistance: 0
+        };
+    }
+
+    const filtered = (points || []).filter((point) => {
+        const pointId = Number(point.id);
+
+        return (
+            pointId !== numericStartId &&
+            pointId !== numericEndId
+        );
+    });
+
+    const permutations = generatePermutations(filtered);
+
+    let best = null;
+
+    permutations.forEach((order) => {
+        // 시작점과 도착점도 숫자 ID가 아니라 객체로 넣는다.
+        const route = [
+            startPoint,
+            ...order,
+            endPoint
+        ];
+
+        const distance = route.reduce(
+            (sum, currentPoint, index) => {
+                if (index === 0) {
+                    return sum;
+                }
+
+                const previousPoint = route[index - 1];
+
+                return sum + calculateDistance(
+                    previousPoint,
+                    currentPoint
+                );
+            },
+            0
+        );
+
+        if (!best || distance < best.totalDistance) {
+            best = {
+                route,
+                totalDistance: distance
+            };
+        }
+    });
+
+    console.log(
+        '최종 경로 번호:',
+        best?.route?.map((point) => point.id)
+    );
+
+    console.log(
+        '최종 총 거리:',
+        best?.totalDistance
+    );
+
+    return best || {
+        route: [startPoint, endPoint],
+        totalDistance: calculateDistance(
+            startPoint,
+            endPoint
+        )
+    };
+};
+
+        const formatCollectionDistance = (distance) => {
+            if (distance >= 1000) {
+                return `${(distance / 1000).toFixed(2)} km`;
+            }
+            return `${Math.round(distance)} m`;
+        };
+
+        const formatCollectionTime = (distance, pointCount) => {
+            const movingMinutes = distance / 80;
+            const collectionMinutes = pointCount * 2;
+            return Math.round(movingMinutes + collectionMinutes);
+        };
+
+        const resetCollectionRoute = () => {
+            if (window.collectionRouteLayer) {
+                window.collectionRouteLayer.clearLayers();
+            }
+            window.collectionRouteArrows.forEach((arrow) => arrow.remove());
+            window.collectionRouteArrows = [];
+            Object.values(window.collectionMarkers || {}).forEach((marker) => {
+                if (marker?.setIcon) {
+                    marker.setIcon(L.divIcon({
+                        html: `<div class="collection-point-marker">${marker.options?.collectionPointId || ''}</div>`,
+                        className: '',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                        pane: 'collectionPointPane'
+                    }));
+                }
+            });
+            setCollectionRouteError('');
+            const resultEl = document.getElementById('collectionRouteResult');
+            if (resultEl) {
+                resultEl.innerHTML = '수거 지점을 불러온 뒤 경로를 계산할 수 있습니다.';
+            }
+            const startSelect = document.getElementById('collectionRouteStart');
+            const endSelect = document.getElementById('collectionRouteEnd');
+            if (startSelect) startSelect.value = '1';
+            if (endSelect) endSelect.value = '4';
+        };
+
+        const updateCollectionMarkers = (route = [], routeOrder = []) => {
+            Object.values(window.collectionMarkers || {}).forEach((marker) => {
+                const pointId = Number(marker.options?.collectionPointId || 0);
+                const isStart = pointId === route[0];
+                const isEnd = pointId === route[route.length - 1];
+                const routeIndex = routeOrder.indexOf(pointId);
+                const roleClass = isStart ? 'start' : isEnd ? 'end' : (routeIndex >= 0 ? 'intermediate' : '');
+                const visitText = routeIndex >= 0 ? `<div class="collection-route-visit-badge">방문 ${routeIndex + 1}</div>` : '';
+                if (marker?.setIcon) {
+                    marker.setIcon(L.divIcon({
+                        html: `<div class="collection-point-marker ${roleClass}">${pointId}${visitText}</div>`,
+                        className: '',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                        pane: 'collectionPointPane'
+                    }));
+                }
+            });
+        };
+
+       const drawCollectionRoute = (route) => {
+    if (window.collectionRouteLayer) {
+        window.collectionRouteLayer.clearLayers();
+    }
+
+    window.collectionRouteArrows.forEach((arrow) => arrow.remove());
+    window.collectionRouteArrows = [];
+
+    if (!Array.isArray(route) || route.length < 2) return;
+
+    // route는 이미 지점 객체 배열이므로 다시 ID로 찾지 않는다.
+    const routePoints = route.filter((point) => {
+        return (
+            point &&
+            Number.isFinite(Number(point.lat)) &&
+            Number.isFinite(Number(point.lng))
+        );
+    });
+
+    if (routePoints.length < 2) return;
+
+    const polyline = L.polyline(
+        routePoints.map((point) => [
+            Number(point.lat),
+            Number(point.lng)
+        ]),
+        {
+            color: '#2563eb',
+            weight: 5,
+            opacity: 0.85
+        }
+    );
+
+    window.collectionRouteLayer =
+        L.layerGroup([polyline]).addTo(map);
+
+            routePoints.forEach((point, index) => {
+                const marker = window.collectionMarkers[point.id];
+                if (!marker) return;
+                const roleClass = index === 0 ? 'start' : index === routePoints.length - 1 ? 'end' : 'intermediate';
+                const visitText = `<div class="collection-route-visit-badge">방문 ${index + 1}</div>`;
+                marker.setIcon(L.divIcon({
+                    html: `<div class="collection-point-marker ${roleClass}">${point.id}${visitText}</div>`,
+                    className: '',
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16],
+                    pane: 'collectionPointPane'
+                }));
+            });
+
+            routePoints.slice(1).forEach((point, index) => {
+                const from = routePoints[index];
+                const to = point;
+                const midLat = (from.lat + to.lat) / 2;
+                const midLng = (from.lng + to.lng) / 2;
+                const arrow = L.marker([midLat, midLng], {
+                    icon: L.divIcon({
+                        html: '<div style="font-size:16px;color:#2563eb;">→</div>',
+                        className: '',
+                        iconSize: [16, 16],
+                        iconAnchor: [8, 8],
+                        pane: 'collectionPointPane'
+                    })
+                }).addTo(map);
+                window.collectionRouteArrows.push(arrow);
+            });
+
+            map.fitBounds(L.latLngBounds(routePoints.map((point) => [point.lat, point.lng])), { padding: [40, 40] });
+        };
+
+        const updateCollectionRouteResult = (route, totalDistance, points) => {
+            const resultEl = document.getElementById('collectionRouteResult');
+            if (!resultEl) return;
+            const routeText = route.join(' → ');
+            const estimatedTime = formatCollectionTime(totalDistance, points.length);
+            resultEl.innerHTML = `
+                <div><strong>최적 방문 순서</strong><br>${routeText}</div>
+                <div style="margin-top:6px;"><strong>총 이동 거리</strong><br>${formatCollectionDistance(totalDistance)}</div>
+                <div style="margin-top:6px;"><strong>예상 수거 시간</strong><br>약 ${estimatedTime}분</div>
+                <div style="margin-top:6px;"><strong>방문 지점 수</strong><br>${points.length}개</div>
+                <div style="margin-top:8px;color:#64748b;">모든 수거 지점을 한 번씩 방문하고 선택한 도착 지점에서 종료하는 최단 경로입니다.</div>
+            `;
+        };
+
+        const populateCollectionRouteSelects = () => {
+            const startSelect = document.getElementById('collectionRouteStart');
+            const endSelect = document.getElementById('collectionRouteEnd');
+            if (!startSelect || !endSelect) return;
+            startSelect.innerHTML = window.collectionPoints.map((point) => `<option value="${point.id}">${point.id}</option>`).join('');
+            endSelect.innerHTML = window.collectionPoints.map((point) => `<option value="${point.id}">${point.id}</option>`).join('');
+            startSelect.value = '1';
+            endSelect.value = '4';
+        };
+
+        const loadCollectionPoints = async () => {
+            try {
+                const response = await fetch('/api/marine/collection-points', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (!result.ok || !Array.isArray(result.data)) {
+                    throw new Error('수거 지점 데이터를 읽을 수 없습니다.');
+                }
+
+                const rawPoints = result.data.filter((item) => item && item.zone_id === 'HAMDEOK-A03');
+                const validPoints = rawPoints.filter((item) => Number.isFinite(Number(item.lat)) && Number.isFinite(Number(item.lng)));
+                const invalidPoints = rawPoints.filter((item) => !Number.isFinite(Number(item.lat)) || !Number.isFinite(Number(item.lng)));
+
+                if (invalidPoints.length > 0) {
+                    console.warn('좌표가 올바르지 않은 수거 지점이 있습니다.', invalidPoints);
+                    setCollectionRouteError('일부 수거 지점의 좌표가 올바르지 않습니다.');
+                }
+
+                if (validPoints.length === 0) {
+                    setCollectionRouteError('HAMDEOK-A03 내부에 표시할 수거 지점이 없습니다.');
+                    return;
+                }
+
+                const filteredPoints = validPoints;
+
+                window.collectionPoints = filteredPoints.map((point) => ({
+                    id: Number(point.id),
+                    name: point.name || String(point.id),
+                    zone_id: point.zone_id,
+                    lat: Number(point.lat),
+                    lng: Number(point.lng)
+                }));
+
+                window.collectionMarkers = {};
+                window.collectionPoints.forEach((point) => {
+                    const marker = L.marker([point.lat, point.lng], {
+                        pane: 'collectionPointPane',
+                        collectionPointId: point.id
+                    }).addTo(map);
+                    marker.bindPopup(`<div><strong>수거 지점 ${point.id}</strong><br>구역 ID: ${point.zone_id}<br>위도: ${point.lat}<br>경도: ${point.lng}<br>현재 역할: 일반 수거 지점</div>`);
+                    const markerIcon = L.divIcon({
+                        html: `<div class="collection-point-marker">${point.id}</div>`,
+                        className: '',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 16],
+                        pane: 'collectionPointPane'
+                    });
+                    marker.setIcon(markerIcon);
+                    window.collectionMarkers[point.id] = marker;
+                });
+
+                populateCollectionRouteSelects();
+                setCollectionRouteError('');
+            } catch (error) {
+                console.error('수거 지점 로딩 실패', error);
+                setCollectionRouteError(`수거 지점을 불러오지 못했습니다: ${error.message || error}`);
+            }
+        };
+
+        const bindCollectionRouteControls = () => {
+            const calcBtn = document.getElementById('btnCalculateCollectionRoute');
+            const resetBtn = document.getElementById('btnResetCollectionRoute');
+            const startSelect = document.getElementById('collectionRouteStart');
+            const endSelect = document.getElementById('collectionRouteEnd');
+            if (!calcBtn || !resetBtn || !startSelect || !endSelect) return;
+
+            if (calcBtn.dataset.bound === 'true') return;
+            calcBtn.dataset.bound = 'true';
+            resetBtn.dataset.bound = 'true';
+
+            calcBtn.addEventListener('click', () => {
+                window.calculateCollectionRoute();
+            });
+
+            resetBtn.addEventListener('click', () => {
+                window.resetCollectionRouteUi();
+            });
+        };
+
+        window.calculateCollectionRoute = () => {
+            const startSelect = document.getElementById('collectionRouteStart');
+            const endSelect = document.getElementById('collectionRouteEnd');
+            if (!startSelect || !endSelect) return;
+
+            if (!window.collectionPoints || window.collectionPoints.length < 2) {
+                setCollectionRouteError('표시할 수거 지점이 2개 미만입니다.');
+                return;
+            }
+
+            const startId = Number(startSelect.value);
+            const endId = Number(endSelect.value);
+            if (!startId || !endId || startId === endId) {
+                setCollectionRouteError('시작 지점과 도착 지점은 서로 달라야 합니다.');
+                return;
+            }
+
+            const route = findShortestCollectionRoute(window.collectionPoints, startId, endId);
+            const routeIds = route.route;
+            drawCollectionRoute(routeIds, window.collectionPoints);
+            updateCollectionRouteResult(routeIds, route.totalDistance, window.collectionPoints);
+            setCollectionRouteError('');
+        };
+
+        window.resetCollectionRouteUi = () => {
+            resetCollectionRoute();
+            const startSelect = document.getElementById('collectionRouteStart');
+            const endSelect = document.getElementById('collectionRouteEnd');
+            if (startSelect) startSelect.value = '1';
+            if (endSelect) endSelect.value = '4';
+        };
+
+        const getZoneName = (zoneId) => {
+            const zone = zoneInfoById.get(zoneId);
+            return zone?.zone_name || zoneId || '정보 없음';
+        };
+
+        const getZoneDetail = (zoneId) => {
+            const risk = riskByZoneId.get(zoneId) ?? {};
+            const zone = zoneInfoById.get(zoneId) ?? {};
+
+            return {
+                ...risk,
+                zone_id: zoneId,
+                zone_name: zone.zone_name ?? zoneId
+            };
+        };
 
         const translateRiskLevel = (level) => {
             if (!level) return '정보 없음';
@@ -650,11 +1189,47 @@
             return '정보 없음';
         };
 
+        const getRiskLabel = (level) => translateRiskLevel(level);
+
+        const getStatusLabel = (status) => {
+            if (status === 'collected') return '수거 완료';
+            if (status === 'uncollected') return '수거 대기';
+            if (status === 'collecting') return '수거 진행';
+            return status || '정보 없음';
+        };
+
+        const formatHours = (value) => {
+            if (value == null || value === '' || value === 0) return '-';
+            const num = Number(value);
+            if (Number.isNaN(num)) return '-';
+            return Number.isInteger(num) ? `${num}시간` : `${Math.round(num * 10) / 10}시간`;
+        };
+
+        const formatDateTime = (value) => {
+            if (!value) return '-';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+        };
+
         const getRiskLevelClass = (level) => {
             if (level === 'danger') return 'danger';
             if (level === 'warning') return 'warning';
             if (level === 'normal') return 'normal';
             return '';
+        };
+
+        const getRiskCssClass = (level) => {
+            if (level === 'danger') return 'alert-danger';
+            if (level === 'warning') return 'alert-warning';
+            if (level === 'collecting') return 'alert-unverified';
+            return 'alert-delay';
         };
 
         const renderRiskSummaryCards = (summary) => {
@@ -666,30 +1241,58 @@
             document.getElementById('normalZoneCount').textContent = data.normal_zone_count ?? 0;
         };
 
-        const updateAutomaticReport = () => {
+        const renderAutomaticReport = () => {
             const summary = zoneRiskData.report_summary ?? {};
-            const generatedAt = zoneRiskData.generated_at || summary.generated_at || null;
-            const actions = Array.isArray(summary.recommended_actions) ? summary.recommended_actions : [];
-            const notes = summary.notes || summary.comment || zoneRiskData.report_notes || '';
-
             const generatedAtEl = document.getElementById('reportGeneratedAt');
+            const reportSummaryEl = document.getElementById('reportSummaryText');
             const reportActionsEl = document.getElementById('reportActions');
-            const reportNotesEl = document.getElementById('reportNotes');
+            const automaticReportEl = document.getElementById('automaticReport');
+
+            if (!automaticReportEl) return;
+
+            const highestRiskZoneId = summary.highest_risk_zone ?? null;
+            const highestRisk = (zoneRiskData.zones ?? []).find(zone => zone.zone_id === highestRiskZoneId);
+            const highestZoneInfo = highestRiskZoneId ? getZoneDetail(highestRiskZoneId) : null;
+
+            if (!summary || Object.keys(summary).length === 0) {
+                if (generatedAtEl) generatedAtEl.textContent = '보고서 생성일: 정보 없음';
+                if (reportSummaryEl) reportSummaryEl.textContent = '자동 보고서를 생성할 데이터가 없습니다.';
+                if (reportActionsEl) reportActionsEl.innerHTML = '<li>권장 조치가 없습니다.</li>';
+                return;
+            }
+
+            const generatedAt = zoneRiskData.generated_at || null;
+            const totalZoneCount = summary.total_zone_count ?? 0;
+            const totalDetectedCount = summary.total_detected_count ?? 0;
+            const dangerZoneCount = summary.danger_zone_count ?? 0;
+            const warningZoneCount = summary.warning_zone_count ?? 0;
+            const normalZoneCount = summary.normal_zone_count ?? 0;
+            const highestRiskZoneName = highestZoneInfo?.zone_name || highestRiskZoneId || '-';
+            const highestRiskScore = highestRisk?.risk_score ?? '-';
+            const highestRiskTrashCount = highestRisk?.trash_count ?? '-';
+            const highestRiskTrashType = highestRisk?.main_trash_type ?? '-';
+            const highestRiskHours = highestRisk?.uncollected_hours ?? '-';
+            const recommendedAction = highestRisk?.recommended_action || summary.recommended_actions?.[0] || '권장 조치가 없습니다.';
 
             if (generatedAtEl) {
-                generatedAtEl.textContent = generatedAt
-                    ? `보고서 생성일: ${generatedAt}`
-                    : '보고서 생성일: 정보 없음';
+                generatedAtEl.textContent = generatedAt ? `보고서 생성일: ${formatDateTime(generatedAt)}` : '보고서 생성일: 정보 없음';
+            }
+
+            if (reportSummaryEl) {
+                // concise, single-paragraph summary for readability
+                const dateText = generatedAt ? `${formatDateTime(generatedAt)} 기준` : '최근 기준';
+                reportSummaryEl.innerHTML = `
+                    <p>${dateText} — ${totalZoneCount}개 구역 분석 · 탐지 ${totalDetectedCount}개.</p>
+                    <p>위험 ${dangerZoneCount} / 주의 ${warningZoneCount} / 정상 ${normalZoneCount}.</p>
+                    ${highestRiskZoneId ? `<p>우선 점검: ${highestRiskZoneName} (${highestRiskScore}점)</p>` : ''}
+                `;
             }
 
             if (reportActionsEl) {
+                const actions = Array.isArray(summary.recommended_actions) ? summary.recommended_actions : [];
                 reportActionsEl.innerHTML = actions.length > 0
                     ? actions.map((action) => `<li>${action}</li>`).join('')
                     : '<li>권장 조치가 없습니다.</li>';
-            }
-
-            if (reportNotesEl) {
-                reportNotesEl.textContent = notes || '추가 보고서 요약이 없습니다.';
             }
         };
 
@@ -711,17 +1314,19 @@
             top3List.innerHTML = top3.map((item, index) => {
                 const rank = index + 1;
                 const zoneId = item.zone_id ?? '정보 없음';
-                const riskScore = item.risk_score ?? 0;
-                const levelText = translateRiskLevel(item.risk_level);
-                const trashCount = item.trash_count ?? 0;
-                const mainTrashType = item.main_trash_type ?? '정보 없음';
-                const levelClass = getRiskLevelClass(item.risk_level);
+                const zoneDetail = getZoneDetail(zoneId);
+                const zoneName = zoneDetail.zone_name || zoneId;
+                const riskScore = item.risk_score ?? zoneDetail.risk_score ?? 0;
+                const trashCount = item.trash_count ?? zoneDetail.trash_count ?? 0;
+                const mainTrashType = item.main_trash_type ?? zoneDetail.main_trash_type ?? '정보 없음';
+                const levelClass = getRiskLevelClass(item.risk_level ?? zoneDetail.risk_level);
 
                 return `
                     <button type="button" class="ranking-item ${levelClass}" data-zone="${zoneId}">
                         <span class="ranking-number ${levelClass}-rank">${rank}위</span>
                         <span class="ranking-info">
-                            <strong>${zoneId}</strong>
+                            <strong>${zoneName}</strong>
+                            <small>${zoneId}</small>
                             <small>탐지량 ${trashCount}개 · ${mainTrashType}</small>
                         </span>
                         <span class="ranking-score ${levelClass}-text">${riskScore}점</span>
@@ -738,8 +1343,8 @@
 
         const statusLabels = {
             collected: '수거 완료',
-            uncollected: '미수거',
-            unverified: '미확인'
+            uncollected: '수거 대기',
+            collecting: '수거 진행'
         };
 
         const defaultRiskColor = {
@@ -832,6 +1437,71 @@
                 });
 
             topSummary.innerHTML = items.length > 0 ? items.join('') : '<div class="marine-top-summary-item">상위 위험 구역 정보가 없습니다.</div>';
+        };
+
+        const renderAlertList = () => {
+            const alertList = document.getElementById('alertList');
+            if (!alertList) return;
+
+            const alertZones = [...(zoneRiskData.zones ?? [])]
+                .filter(zone => {
+                    const level = zone.risk_level;
+                    const status = zone.status;
+                    const uncollectedHours = Number(zone.uncollected_hours ?? 0);
+
+                    return level === 'danger' || level === 'warning' || status === 'collecting' || (status === 'uncollected' && uncollectedHours >= 48);
+                })
+                .sort((a, b) => {
+                    const riskDiff = Number(b.risk_score ?? 0) - Number(a.risk_score ?? 0);
+                    if (riskDiff !== 0) return riskDiff;
+                    return Number(b.uncollected_hours ?? 0) - Number(a.uncollected_hours ?? 0);
+                });
+
+            if (alertZones.length === 0) {
+                alertList.innerHTML = '<div class="marine-alert alert-delay"><strong>알림 없음</strong><p>현재 표시할 경고·알림이 없습니다.</p></div>';
+                return;
+            }
+
+            alertList.innerHTML = alertZones.map((zone) => {
+                const zoneDetail = getZoneDetail(zone.zone_id);
+                const zoneName = zoneDetail.zone_name || zone.zone_id || '정보 없음';
+                const riskScore = zone.risk_score ?? 0;
+                const trashCount = zone.trash_count ?? 0;
+                const recommendedAction = zone.recommended_action || '현장 확인이 필요합니다.';
+                const uncollectedHours = Number(zone.uncollected_hours ?? 0);
+                const level = zone.risk_level;
+                const status = zone.status;
+                const cssClass = getRiskCssClass(level);
+
+                let title = '알림';
+                let body = '';
+
+                if (level === 'danger') {
+                    title = '긴급 알림';
+                    body = `${zoneName} — 위험도 ${riskScore}점. 미수거 ${trashCount}개. 권장: ${recommendedAction}`;
+                } else if (level === 'warning') {
+                    title = '주의 알림';
+                    body = `${zoneName} — 위험도 ${riskScore}점. 탐지 ${trashCount}개. 권장: ${recommendedAction}`;
+                } else if (status === 'collecting') {
+                    title = '수거 진행 알림';
+                    body = `${zoneName} — 탐지 ${trashCount}개. 수거 진행 중입니다. 현장 확인 요망.`;
+                } else if (status === 'uncollected' && uncollectedHours >= 48) {
+                    title = '수거 지연 알림';
+                    body = `${zoneName} — 수거 지연 ${formatHours(uncollectedHours)}. 탐지 ${trashCount}개. 권장: ${recommendedAction}`;
+                }
+
+                if (level === 'danger' && uncollectedHours >= 48) {
+                    body = `${zoneName} — 위험도 ${riskScore}점, 수거 지연 ${formatHours(uncollectedHours)}. 쓰레기 ${trashCount}개. 권장: ${recommendedAction}`;
+                }
+
+                return `
+                    <div class="marine-alert ${cssClass}">
+                        <strong>${title}</strong>
+                        <p>${body}</p>
+                        <small>${zoneName} · 위험도 ${riskScore}점 · ${getStatusLabel(status)}</small>
+                    </div>
+                `;
+            }).join('');
         };
 
         const focusZoneOnMap = (zone, latitude, longitude) => {
@@ -976,22 +1646,22 @@
                     }
                 });
 
-                const score = risk?.score ?? risk?.risk ?? '정보 없음';
-                const levelText = translateRiskLevel(risk?.level ?? zone.level ?? null);
-                const detections = risk?.count ?? zone.count ?? '정보 없음';
-                const mainType = (risk && risk.major_type) || (zone.major_type) || '정보 없음';
-                const uncollected = (risk && risk.uncollected_hours) || (zone.uncollected_hours) || '정보 없음';
-                const action = (risk && risk.recommendation) || (zone.recommendation) || '정보 없음';
+                const score = risk?.risk_score ?? risk?.score ?? risk?.risk ?? '정보 없음';
+                const levelText = translateRiskLevel(risk?.risk_level ?? risk?.level ?? zone.level ?? null);
+                const detections = risk?.trash_count ?? risk?.count ?? zone.count ?? '정보 없음';
+                const mainType = risk?.main_trash_type ?? risk?.major_type ?? zone.major_type ?? '정보 없음';
+                const uncollected = risk?.uncollected_hours ?? zone.uncollected_hours ?? '정보 없음';
+                const action = risk?.recommended_action ?? risk?.recommendation ?? zone.recommendation ?? '정보 없음';
 
                 const popupHtml = `
                     <div style="font-weight:700;margin-bottom:6px;">${zone.zone_name || '구역명 없음'}</div>
                     <div>구역 ID: ${zone.zone_id || 'N/A'}</div>
                     <div>위험도: ${score}점</div>
                     <div>등급: ${levelText}</div>
-                    <div>탐지량: ${detections}</div>
-                    <div>주요 종류: ${mainType}</div>
-                    <div>미수거: ${uncollected}</div>
-                    <div>조치: ${action}</div>
+                    <div>탐지량: ${detections}개</div>
+                    <div>주요 쓰레기: ${mainType}</div>
+                    <div>수거 대기: ${uncollected}</div>
+                    <div>권장 조치: ${action}</div>
                 `;
 
                 layer.bindPopup(popupHtml);
@@ -1039,22 +1709,22 @@
                     }
                 });
 
-                const score = risk?.score ?? meta.risk ?? '정보 없음';
-                const levelText = translateRiskLevel(risk?.level ?? meta.level ?? null);
-                const detections = risk?.count ?? meta.count ?? '정보 없음';
-                const mainType = (risk && risk.major_type) || (meta.major_type) || '정보 없음';
-                const uncollected = (risk && risk.uncollected_hours) || (meta.uncollected_hours) || '정보 없음';
-                const action = (risk && risk.recommendation) || (meta.recommendation) || '정보 없음';
+                const score = risk?.risk_score ?? risk?.score ?? meta.risk ?? '정보 없음';
+                const levelText = translateRiskLevel(risk?.risk_level ?? risk?.level ?? meta.level ?? null);
+                const detections = risk?.trash_count ?? risk?.count ?? meta.count ?? '정보 없음';
+                const mainType = risk?.main_trash_type ?? risk?.major_type ?? meta.major_type ?? '정보 없음';
+                const uncollected = risk?.uncollected_hours ?? meta.uncollected_hours ?? '정보 없음';
+                const action = risk?.recommended_action ?? risk?.recommendation ?? meta.recommendation ?? '정보 없음';
 
                 const popupHtml = `
                     <div style="font-weight:700;margin-bottom:6px;">${meta.zone_name || '구역명 없음'}</div>
                     <div>구역 ID: ${meta.zone_id || 'N/A'}</div>
                     <div>위험도: ${score}점</div>
                     <div>등급: ${levelText}</div>
-                    <div>탐지량: ${detections}</div>
-                    <div>주요 종류: ${mainType}</div>
-                    <div>미수거: ${uncollected}</div>
-                    <div>조치: ${action}</div>
+                    <div>탐지량: ${detections}개</div>
+                    <div>주요 쓰레기: ${mainType}</div>
+                    <div>수거 대기: ${uncollected}</div>
+                    <div>권장 조치: ${action}</div>
                 `;
 
                 layer.bindPopup(popupHtml);
@@ -1156,11 +1826,19 @@
         };
 
         renderRiskSummaryCards(zoneRiskData.report_summary ?? {});
-        updateAutomaticReport();
+        renderAutomaticReport();
         renderTop3List();
+        renderAlertList();
         renderFixedZonesFromJson();
         loadZoneStatsSummary();
         bindReportGenerateButton();
+        loadCollectionPoints();
+        bindCollectionRouteControls();
+
+        window.setTimeout(() => {
+            loadCollectionPoints();
+            bindCollectionRouteControls();
+        }, 300);
         // Note: do not auto-load DB-saved polygons on page load to avoid
         // duplicate rendering with fixed JSON polygons.
         // loadSavedDrawings();
