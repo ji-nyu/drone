@@ -75,6 +75,19 @@ class Drone extends BaseController
         $inspectionDetections = $this->loadJsonFile(APPPATH . 'Data/inspection_detections_raw.json', $inspectionDetectionsDefault);
         $zoneRiskSummary = $this->loadJsonFile(APPPATH . 'Data/zone_risk_summary.json', $zoneRiskSummaryDefault);
 
+        // Ensure recommended_action values are computed consistently from status/risk_level.
+        // If a generator script exists, it should produce these, but compute as fallback here.
+        try {
+            if (is_file(APPPATH . 'Helpers/recommendation_helper.php')) {
+                require_once APPPATH . 'Helpers/recommendation_helper.php';
+                if (function_exists('recomputeZoneRecommendedActions')) {
+                    recomputeZoneRecommendedActions($zoneRiskSummary);
+                }
+            }
+        } catch (\Throwable $e) {
+            // non-fatal, prefer to continue with existing JSON
+        }
+
         return $this->render(
             'marine_trash',
             '해양쓰레기',
@@ -118,6 +131,39 @@ class Drone extends BaseController
             'fixed' => $marineZones,
             'detection' => $inspectionDetections,
             'risk' => $zoneRiskSummary,
+        ]);
+    }
+
+    public function collectionPoints()
+    {
+        $path = APPPATH . 'Data/collection_points.json';
+
+        if (!is_file($path)) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'ok' => false,
+                'message' => 'collection_points.json을 찾을 수 없습니다.',
+            ]);
+        }
+
+        $json = file_get_contents($path);
+        if ($json === false) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'ok' => false,
+                'message' => 'collection_points.json을 읽을 수 없습니다.',
+            ]);
+        }
+
+        $data = json_decode($json, true);
+        if (!is_array($data)) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'ok' => false,
+                'message' => 'collection_points.json 형식이 올바르지 않습니다.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'ok' => true,
+            'data' => $data,
         ]);
     }
 
