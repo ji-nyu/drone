@@ -1,10 +1,12 @@
-<!-- Control page -->
+<!-- Control — Waveon -->
 <div class="ctrl-left">
   <div class="ctrl-topbar">
     <select class="drone-select" id="droneSelect" onchange="changeDrone(this.value)"></select>
-    <button class="btn primary" id="btnConnect"    onclick="connectDrone()"    style="font-size:11px;padding:4px 10px">● 연결</button>
-    <button class="btn"         id="btnDisconnect" onclick="disconnectDrone()" style="font-size:11px;padding:4px 10px;display:none">○ 연결 해제</button>
-    <span id="ctrlConn" style="font-size:11px;color:#9ca3af">미연결</span>
+    <div class="conn-toggle">
+      <button type="button" class="conn-pill primary" id="btnConnect" onclick="connectDrone()">연결</button>
+      <button type="button" class="conn-pill" id="btnDisconnect" onclick="disconnectDrone()" style="display:none">연결 해제</button>
+    </div>
+    <span class="conn-status" id="ctrlConn">미연결</span>
   </div>
 
   <div class="ctrl-stat-bar">
@@ -13,10 +15,10 @@
       <div class="ctrl-stat-value" id="ctrlBattery">--<span class="ctrl-stat-unit">%</span></div>
       <div class="ctrl-bat-bar"><div class="ctrl-bat-fill" id="ctrlBatFill" style="width:0%"></div></div>
       <div class="ctrl-stat-sub" id="ctrlBatEst">— 분 추정</div>
-      <div class="ctrl-stat-sub" id="ctrlBatRange" style="color:#1d4ed8">편도 -- m</div>
+      <div class="ctrl-stat-sub accent" id="ctrlBatRange">편도 -- m</div>
     </div>
     <div class="ctrl-stat">
-      <div class="ctrl-stat-label">고도</div>
+      <div class="ctrl-stat-label">고도 / 속도</div>
       <div class="ctrl-stat-value" id="ctrlAlt">--<span class="ctrl-stat-unit">m</span></div>
       <div class="ctrl-stat-sub" id="ctrlSpeed">속도 —</div>
     </div>
@@ -27,7 +29,7 @@
     </div>
     <div class="ctrl-stat">
       <div class="ctrl-stat-label">임무</div>
-      <div class="ctrl-stat-value" id="ctrlMissionState" style="font-size:14px;padding-top:2px">대기중</div>
+      <div class="ctrl-stat-value mission" id="ctrlMissionState">대기중</div>
       <div class="ctrl-stat-sub" id="ctrlMissionId">ID: —</div>
     </div>
   </div>
@@ -35,7 +37,13 @@
   <div class="video-area">
     <img class="video-feed" id="videoFeed" alt="" style="display:none;width:100%;height:100%;object-fit:contain;background:#000">
     <div class="video-ph" id="videoPh">
-      <div class="video-ph-icon">📡</div>
+      <div class="video-ph-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="6" y="12" width="28" height="22" rx="3"/>
+          <path d="M34 20l8-5v18l-8-5V20z"/>
+          <circle cx="20" cy="23" r="4"/>
+        </svg>
+      </div>
       <p>영상 스트림 대기 중</p>
       <small>Python API 연결 후 자동으로 표시됩니다</small>
     </div>
@@ -45,7 +53,7 @@
 
   <div class="log-area">
     <div class="area-header">
-      <span class="area-title">비행 / VLM 로그</span>
+      <span class="area-title">비행 로그</span>
       <button class="btn-xs" onclick="clearLog()">지우기</button>
     </div>
     <div class="log-body" id="logBody"></div>
@@ -53,64 +61,53 @@
 </div>
 
 <div class="ctrl-right">
-  <!-- 상태 머신 -->
-  <!--
-  <div class="rpanel-section">
-    <div class="rpanel-title">임무 진행 상태</div>
-    <div class="state-list" id="stateChain"></div>
-  </div>
-  -->
-
-  <!-- 제어 버튼 -->
   <div class="rpanel-section">
     <div class="rpanel-title">드론 제어</div>
-    <div class="btn-grid" style="margin-top:0">
-      <button class="btn primary" id="btnTakeoff"   onclick="droneCmd('takeoff')"  >↑ 이륙</button>
-      <button class="btn"         id="btnLand"      onclick="droneCmd('land')"     >↓ 착륙</button>
-      <button class="btn"         id="btnReturn"    onclick="droneCmd('return')"   >⟳ 귀환</button>
-      <button class="btn"         id="btnHover"     onclick="droneCmd('hover')"    >◎ 정지비행</button>
+    <div class="btn-grid">
+      <button class="btn primary" id="btnTakeoff" onclick="droneCmd('takeoff')">↑ 이륙</button>
+      <button class="btn" id="btnLand" onclick="droneCmd('land')">↓ 착륙</button>
+      <button class="btn" id="btnReturn" onclick="droneCmd('return')">⟳ 귀환</button>
+      <button class="btn" id="btnHover" onclick="droneCmd('hover')">◎ 정지비행</button>
       <button class="btn danger full" id="btnEmergency" onclick="droneCmd('emergency')">⚠ 긴급정지</button>
-      <button class="btn full" id="btnRetry" onclick="droneCmd('retry')" style="display:none;border-color:#f59e0b;color:#b45309">↺ 실패 재시도</button>
+      <button class="btn full btn-retry" id="btnRetry" onclick="droneCmd('retry')" style="display:none">↺ 실패 재시도</button>
     </div>
   </div>
 
-  <!-- 키보드 조작 -->
   <div class="rpanel-section">
-    <div class="rpanel-title" style="display:flex;justify-content:space-between;align-items:center">
-      키보드 조작
-      <label style="font-size:11px;font-weight:400;display:flex;align-items:center;gap:4px;cursor:pointer">
+    <div class="rpanel-title kbd-title">
+      <span>키보드 조작</span>
+      <label class="kbd-enable">
         <input type="checkbox" id="kbdEnable"> 활성화
       </label>
     </div>
-    <div style="font-size:11px;color:#9ca3af;margin-bottom:8px">W/S: 상승·하강 &nbsp;|&nbsp; A/D: 좌우회전 &nbsp;|&nbsp; 방향키: 전후좌우</div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:6px">
+    <div class="kbd-hint">W/S 상승·하강 · A/D 좌우회전 · 방향키 전후좌우</div>
+    <div class="kbd-grid">
       <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-keyw">W<br><span style="font-size:9px;font-weight:400">상승</span></div>
+      <div class="kbd-key" id="k-keyw">W<span>상승</span></div>
       <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-keya">A<br><span style="font-size:9px;font-weight:400">좌회전</span></div>
-      <div class="kbd-key empty" style="font-size:14px">●</div>
-      <div class="kbd-key" id="k-keyd">D<br><span style="font-size:9px;font-weight:400">우회전</span></div>
+      <div class="kbd-key" id="k-keya">A<span>좌회전</span></div>
+      <div class="kbd-key empty center-dot">●</div>
+      <div class="kbd-key" id="k-keyd">D<span>우회전</span></div>
       <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-keys">S<br><span style="font-size:9px;font-weight:400">하강</span></div>
-      <div class="kbd-key empty"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:8px">
-      <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-arrowup">↑<br><span style="font-size:9px;font-weight:400">전진</span></div>
-      <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-arrowleft">←<br><span style="font-size:9px;font-weight:400">좌</span></div>
-      <div class="kbd-key empty" style="font-size:14px">●</div>
-      <div class="kbd-key" id="k-arrowright">→<br><span style="font-size:9px;font-weight:400">우</span></div>
-      <div class="kbd-key empty"></div>
-      <div class="kbd-key" id="k-arrowdown">↓<br><span style="font-size:9px;font-weight:400">후진</span></div>
+      <div class="kbd-key" id="k-keys">S<span>하강</span></div>
       <div class="kbd-key empty"></div>
     </div>
-    <div style="font-size:11px;color:#6b7280">
-      RC: <span id="kbdValues" style="font-family:monospace;color:#374151">lr=0 fb=0 ud=0 yaw=0</span>
+    <div class="kbd-grid">
+      <div class="kbd-key empty"></div>
+      <div class="kbd-key" id="k-arrowup">↑<span>전진</span></div>
+      <div class="kbd-key empty"></div>
+      <div class="kbd-key" id="k-arrowleft">←<span>좌</span></div>
+      <div class="kbd-key empty center-dot">●</div>
+      <div class="kbd-key" id="k-arrowright">→<span>우</span></div>
+      <div class="kbd-key empty"></div>
+      <div class="kbd-key" id="k-arrowdown">↓<span>후진</span></div>
+      <div class="kbd-key empty"></div>
+    </div>
+    <div class="kbd-rc">
+      RC: <span id="kbdValues">lr=0 fb=0 ud=0 yaw=0</span>
     </div>
   </div>
 
-  <!-- 기체 정보 -->
   <div class="rpanel-section">
     <div class="rpanel-title">기체 정보</div>
     <div class="info-grid">

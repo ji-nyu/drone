@@ -1,33 +1,53 @@
 <div class="marine-trash-page">
 
     <div class="page-section-title">
-        <h2>해양쓰레기 위험 구역 지도</h2>
-        <p>구역별 해양쓰레기 위험도와 수거 대기 현황을 확인합니다.</p>
+        <h2>해양쓰레기 위험 구역</h2>
+        <p>구역별 위험도와 수거 대기 현황을 한눈에 확인합니다.</p>
     </div>
 
     <section class="marine-summary-grid">
         <div class="marine-summary-card">
-            <span>총 탐지량</span>
-            <strong id="totalDetectedCount">0</strong>
-            <small>전체 탐지 쓰레기 개수</small>
+            <div class="marine-summary-icon blue">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="9" r="5.5"/><path d="M13.5 13.5L17 17"/></svg>
+            </div>
+            <div>
+                <span>총 탐지량</span>
+                <strong id="totalDetectedCount">0</strong>
+                <small>전체 탐지 쓰레기 개수</small>
+            </div>
         </div>
 
         <div class="marine-summary-card">
-            <span>위험 구역</span>
-            <strong id="dangerZoneCount" class="danger-text">0</strong>
-            <small>위험 단계 구역 수</small>
+            <div class="marine-summary-icon red">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3L17.5 16H2.5L10 3z"/><path d="M10 8.5v4M10 14.5v.5"/></svg>
+            </div>
+            <div>
+                <span>위험 구역</span>
+                <strong id="dangerZoneCount" class="danger-text">0</strong>
+                <small>위험 단계 구역 수</small>
+            </div>
         </div>
 
         <div class="marine-summary-card">
-            <span>주의 구역</span>
-            <strong id="warningZoneCount" class="warning-text">0</strong>
-            <small>주의 단계 구역 수</small>
+            <div class="marine-summary-icon amber">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><path d="M10 6.5v4.5M10 14v.5"/></svg>
+            </div>
+            <div>
+                <span>주의 구역</span>
+                <strong id="warningZoneCount" class="warning-text">0</strong>
+                <small>주의 단계 구역 수</small>
+            </div>
         </div>
 
         <div class="marine-summary-card">
-            <span>정상 구역</span>
-            <strong id="normalZoneCount">0</strong>
-            <small>정상 단계 구역 수</small>
+            <div class="marine-summary-icon green">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3l6 2.5v4.5c0 3.8-2.5 6.7-6 8.5-3.5-1.8-6-4.7-6-8.5V5.5L10 3z"/><path d="M7.5 10l2 2 3.5-3.5"/></svg>
+            </div>
+            <div>
+                <span>정상 구역</span>
+                <strong id="normalZoneCount">0</strong>
+                <small>정상 단계 구역 수</small>
+            </div>
         </div>
     </section>
 
@@ -145,551 +165,222 @@
 
 </div>
 <style>
-.marine-trash-page {
-    padding: 20px;
-}
+.marine-trash-page { padding: 4px 2px 24px; }
 
-.page-section-title {
-    margin-bottom: 18px;
-}
-
+.page-section-title { margin-bottom: 18px; }
 .page-section-title h2 {
-    margin: 0 0 5px;
-    font-size: 22px;
+  margin: 0 0 6px; font-size: 18px; font-weight: 700; color: #111827;
 }
-
-.page-section-title p {
-    margin: 0;
-    color: #7b8494;
-    font-size: 13px;
-}
+.page-section-title p { margin: 0; color: #9ca3af; font-size: 13px; }
 
 .marine-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
-    margin-bottom: 16px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px; margin-bottom: 18px;
 }
-
 .marine-summary-card {
-    display: flex;
-    flex-direction: column;
-    min-height: 110px;
-    padding: 18px;
-    background: #ffffff;
-    border: 1px solid #e7ebf0;
-    border-radius: 12px;
+  display: flex; align-items: flex-start; gap: 12px;
+  min-height: 108px; padding: 16px 18px;
+  background: #fff; border: 1px solid #e8eaed; border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(16,24,40,.04);
 }
-
-.marine-summary-card span {
-    color: #7b8494;
-    font-size: 13px;
+.marine-summary-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
 }
-
+.marine-summary-icon svg { width: 20px; height: 20px; }
+.marine-summary-icon.blue  { background: #EFF6FF; color: #3B82F6; }
+.marine-summary-icon.red   { background: #FEF2F2; color: #DC2626; }
+.marine-summary-icon.amber { background: #FFFBEB; color: #D97706; }
+.marine-summary-icon.green { background: #ECFDF5; color: #16A34A; }
+.marine-summary-card span { display: block; color: #6b7280; font-size: 12px; font-weight: 500; }
 .marine-summary-card strong {
-    margin-top: 8px;
-    font-size: 28px;
+  display: block; margin-top: 6px; font-size: 28px; font-weight: 700;
+  color: #111827; line-height: 1; font-variant-numeric: tabular-nums;
+}
+.marine-summary-card strong.danger-text { color: #dc2626; }
+.marine-summary-card strong.warning-text { color: #d97706; }
+.marine-summary-card small { display: block; margin-top: 5px; color: #9ca3af; font-size: 11px; }
+
+.marine-table-section {
+  margin-bottom: 18px; background: #fff; border: 1px solid #e8eaed;
+  border-radius: 14px; padding: 16px 18px 8px;
+  box-shadow: 0 1px 3px rgba(16,24,40,.04);
+}
+.marine-table-header { margin-bottom: 10px; }
+.marine-table-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.marine-table-header-row h3 { margin: 0; font-size: 14px; font-weight: 700; color: #111827; }
+.marine-report-btn { flex-shrink: 0; padding: 8px 14px !important; font-size: 12px !important; }
+.marine-report-status { margin: 8px 0 0; font-size: 13px; color: #475569; min-height: 1.2em; }
+.marine-report-status.is-error { color: #dc2626; }
+.marine-report-status.is-ok { color: #15803d; }
+.marine-report-status a { color: #3B82F6; font-weight: 600; text-decoration: underline; }
+.marine-note { margin: 6px 0 0; font-size: 12px; color: #9ca3af; }
+
+.marine-top-summary {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.marine-top-summary-item {
+  padding: 10px 12px; border: 1px solid #eef0f3; border-radius: 12px;
+  background: #F8F9FB; font-size: 13px; color: #252f3f;
+}
+.marine-top-summary-item strong {
+  display: block; margin-bottom: 4px; font-size: 14px; font-weight: 700;
 }
 
-.marine-summary-card small {
-    margin-top: 3px;
-    color: #9aa3af;
+.marine-table-wrapper {
+  overflow-x: auto; background: #fff; border: 1px solid #eef0f3; border-radius: 12px;
+}
+.marine-table { width: 100%; border-collapse: collapse; min-width: 1020px; }
+.marine-table th, .marine-table td {
+  padding: 12px 14px; border-bottom: 1px solid #f1f3f5;
+  vertical-align: top; font-size: 13px; color: #374151;
+}
+.marine-table th {
+  background: #fafbfc; text-align: left; font-weight: 600;
+  white-space: nowrap; color: #9ca3af; font-size: 11px;
+}
+.marine-table tbody tr:last-child td { border-bottom: none; }
+.marine-table td .zone-id { display: block; margin-top: 4px; font-size: 12px; color: #9ca3af; }
+.marine-table td .badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1;
+}
+.marine-table tbody tr {
+  cursor: pointer; transition: background-color .15s; border-left: 4px solid transparent;
+}
+.marine-table tbody tr:hover { background: #fafbfc; }
+.marine-table tbody tr.selected { background: rgba(59,130,246,.10); }
+.marine-table tbody tr[data-risk-level="danger"] { background: rgba(254,226,226,.35); border-left-color: #ef4444; }
+.marine-table tbody tr[data-risk-level="warning"] { background: rgba(254,243,199,.45); border-left-color: #facc15; }
+.marine-table tbody tr[data-risk-level="normal"] { background: rgba(220,252,231,.4); border-left-color: #22c55e; }
+
+.risk-badge { color: #fff; background: #94a3b8; }
+.status-badge { color: #1f2937; background: #f3f4f6; }
+.status-collected { background: #d1fae5; color: #166534; }
+.status-uncollected { background: #fee2e2; color: #991b1b; }
+.status-unverified { background: #fef3c7; color: #92400e; }
+
+.marine-error-card {
+  padding: 14px 16px; margin-bottom: 12px; border-radius: 12px;
+  border: 1px solid #fecaca; background: #fff1f2; color: #991b1b;
 }
 
 .marine-main-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr);
-    gap: 16px;
+  display: grid; grid-template-columns: minmax(0, 3fr) minmax(320px, 1fr); gap: 14px;
 }
-
-    .marine-table-section {
-        margin-bottom: 20px;
-    }
-
-    .marine-table-header {
-        margin-bottom: 10px;
-    }
-
-    .marine-table-header-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .marine-table-header-row h3 {
-        margin: 0;
-    }
-
-    .marine-report-btn {
-        flex-shrink: 0;
-        padding: 8px 14px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .marine-report-status {
-        margin: 8px 0 0;
-        font-size: 13px;
-        color: #475569;
-        min-height: 1.2em;
-    }
-
-    .marine-report-status.is-error {
-        color: #dc2626;
-    }
-
-    .marine-report-status.is-ok {
-        color: #15803d;
-    }
-
-    .marine-report-status a {
-        color: #1d4ed8;
-        font-weight: 600;
-        text-decoration: underline;
-    }
-
-    .marine-table-wrapper {
-        overflow-x: auto;
-        background: #ffffff;
-        border: 1px solid #e7ebf0;
-        border-radius: 12px;
-    }
-
-    .marine-top-summary {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        margin-bottom: 14px;
-    }
-
-    .marine-top-summary-item {
-        padding: 10px 12px;
-        border: 1px solid #e7ebf0;
-        border-radius: 12px;
-        background: #fbfcfe;
-        font-size: 13px;
-        color: #252f3f;
-    }
-
-    .marine-top-summary-item strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 14px;
-        font-weight: 700;
-    }
-
-    .marine-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 1020px;
-    }
-
-    .marine-table th,
-    .marine-table td {
-        padding: 12px 14px;
-        border-bottom: 1px solid #edf0f3;
-        vertical-align: top;
-        font-size: 13px;
-        color: #334155;
-    }
-
-    .marine-table th {
-        background: #f8fafc;
-        text-align: left;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-
-    .marine-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .marine-table td .zone-id {
-        display: block;
-        margin-top: 4px;
-        font-size: 12px;
-        color: #7b8494;
-    }
-
-    .marine-table td .badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px 8px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 600;
-        line-height: 1;
-    }
-
-    .marine-table tbody tr {
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-        border-left: 4px solid transparent;
-    }
-
-    .marine-table tbody tr:hover {
-        background: rgba(15, 23, 42, 0.04);
-    }
-
-    .marine-table tbody tr.selected {
-        background: rgba(59, 130, 246, 0.12);
-    }
-
-    .marine-table tbody tr[data-risk-level="danger"] {
-        background: rgba(254, 226, 226, 0.4);
-        border-left-color: #ef4444;
-    }
-
-    .marine-table tbody tr[data-risk-level="warning"] {
-        background: rgba(254, 243, 199, 0.5);
-        border-left-color: #facc15;
-    }
-
-    .marine-table tbody tr[data-risk-level="normal"] {
-        background: rgba(220, 252, 231, 0.5);
-        border-left-color: #22c55e;
-    }
-
-    .marine-note {
-        margin: 6px 0 0;
-        font-size: 12px;
-        color: #6b7280;
-    }
-
-    .risk-badge {
-        color: #ffffff;
-        background: #94a3b8;
-    }
-
-    .status-badge {
-        color: #1f2937;
-        background: #f3f4f6;
-    }
-
-    .status-collected {
-        background: #d1fae5;
-        color: #166534;
-    }
-
-    .status-uncollected {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-
-    .status-unverified {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .marine-error-card {
-        padding: 14px 16px;
-        margin-bottom: 12px;
-        border-radius: 12px;
-        border: 1px solid #fecaca;
-        background: #fff1f2;
-        color: #991b1b;
-    }
-
-
-.marine-map-card {
-    overflow: hidden;
+.marine-map-card, .marine-panel-card {
+  overflow: hidden; background: #fff; border: 1px solid #e8eaed; border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(16,24,40,.04);
 }
-
 .marine-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-    padding: 16px 18px;
-    border-bottom: 1px solid #edf0f3;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; padding: 14px 16px; border-bottom: 1px solid #f1f3f5;
 }
-
-.marine-card-header h3 {
-    margin: 0;
-    font-size: 16px;
-}
+.marine-card-header h3 { margin: 0; font-size: 14px; font-weight: 700; color: #111827; }
 
 #marineTrashMap {
-    height: 610px;
-    background:
-        linear-gradient(rgba(39, 170, 220, 0.12), rgba(39, 170, 220, 0.12)),
-        #d9edf6;
+  height: 560px;
+  background: linear-gradient(rgba(59,130,246,.08), rgba(59,130,246,.08)), #e8f1fb;
 }
 
-.marine-side-column {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
+.marine-side-column { display: flex; flex-direction: column; gap: 14px; }
 
-.risk-legend {
-    display: flex;
-    gap: 12px;
-    font-size: 12px;
-    flex-wrap: wrap;
-}
+.risk-legend { display: flex; gap: 12px; font-size: 12px; flex-wrap: wrap; color: #6b7280; }
+.risk-legend span { display: flex; align-items: center; gap: 5px; }
+.risk-dot { width: 9px; height: 9px; border-radius: 50%; }
+.risk-dot.low { background: #22c55e; }
+.risk-dot.warning { background: #facc15; }
+.risk-dot.danger { background: #ef4444; }
 
-.risk-legend span {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.risk-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-}
-
-.risk-dot.low {
-    background: #22c55e;
-}
-
-.risk-dot.warning {
-    background: #facc15;
-}
-
-.risk-dot.danger {
-    background: #ef4444;
-}
-
-.ranking-list {
-    padding: 8px 14px 14px;
-}
-
+.ranking-list { padding: 4px 10px 10px; }
 .ranking-item {
-    display: grid;
-    grid-template-columns: 34px 1fr auto;
-    align-items: center;
-    width: 100%;
-    padding: 14px 6px;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid #edf0f3;
-    text-align: left;
-    cursor: pointer;
+  display: grid; grid-template-columns: 34px 1fr auto; align-items: center;
+  width: 100%; padding: 12px 6px; background: transparent; border: 0;
+  border-bottom: 1px solid #f1f3f5; text-align: left; cursor: pointer;
 }
-
+.ranking-item:last-child { border-bottom: none; }
+.ranking-item:hover { background: #fafbfc; }
 .ranking-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    color: #ffffff;
-    font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; color: #fff; font-weight: 700; font-size: 12px;
 }
+.danger-rank { background: #ef4444; }
+.warning-rank { background: #f4b400; }
+.normal-rank { background: #22c55e; }
+.ranking-info { display: flex; flex-direction: column; gap: 3px; }
+.ranking-info small { color: #9ca3af; }
+.ranking-score { font-weight: 700; color: #111827; }
+.ranking-empty { padding: 20px 8px; color: #9ca3af; font-size: 13px; text-align: center; }
 
-.danger-rank {
-    background: #ef4444;
-}
+.marine-report-card { padding: 14px 16px; background: #F8F9FB; }
+.report-generated { margin: 0 0 10px; font-size: 12px; color: #6b7280; }
+.report-actions-list { margin: 0 0 10px; padding-left: 18px; color: #374151; }
+.report-actions-list li { margin-bottom: 8px; line-height: 1.5; }
+.report-notes { margin: 0; font-size: 13px; color: #6b7280; }
 
-.warning-rank {
-    background: #f4b400;
-}
-
-.normal-rank {
-    background: #22c55e;
-}
-
-.ranking-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.ranking-info small {
-    color: #8a94a3;
-}
-
-.ranking-score {
-    font-weight: 700;
-}
-
-.marine-report-card {
-    padding: 14px 16px;
-    border-top: 1px solid #edf0f3;
-    background: #fbfcfe;
-}
-
-.report-generated {
-    margin: 0 0 12px;
-    font-size: 13px;
-    color: #52606d;
-}
-
-.report-actions-list {
-    margin: 0 0 12px;
-    padding-left: 18px;
-    color: #334155;
-}
-
-.report-actions-list li {
-    margin-bottom: 8px;
-    line-height: 1.5;
-}
-
-.report-notes {
-    margin: 0;
-    font-size: 13px;
-    color: #606f7d;
-}
-
-.marine-alert {
-    margin: 12px;
-    padding: 14px;
-    border-radius: 9px;
-}
-
-.marine-alert p {
-    margin: 8px 0 4px;
-    font-size: 13px;
-}
-
-.marine-alert small {
-    font-size: 12px;
-}
+.marine-alert { margin: 10px 12px; padding: 12px 14px; border-radius: 10px; }
+.marine-alert p { margin: 6px 0 4px; font-size: 13px; }
+.marine-alert small { font-size: 12px; color: #6b7280; }
+.alert-danger { background: #fff2f2; border: 1px solid #fecaca; }
+.alert-warning { background: #fff9e8; border: 1px solid #fde68a; }
+.alert-unverified { background: #fef3c7; border: 1px solid #fcd34d; }
+.alert-delay { background: #eff6ff; border: 1px solid #bfdbfe; }
 
 .collection-route-card {
-    margin-top: 12px;
-    padding: 14px;
-    border: 1px solid #e7ebf0;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  margin: 0; padding: 14px 16px; border: 0; border-top: 1px solid #f1f3f5;
+  border-radius: 0; background: #fff; box-shadow: none;
 }
-
-.collection-route-header h3 {
-    margin: 0 0 4px;
-    font-size: 16px;
-}
-
-.collection-route-header p {
-    margin: 0 0 10px;
-    color: #64748b;
-    font-size: 13px;
-}
-
+.collection-route-header h3 { margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #111827; }
+.collection-route-header p { margin: 0 0 10px; color: #9ca3af; font-size: 12px; }
 .collection-route-controls {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: end;
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: end;
 }
-
 .collection-route-controls label {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 12px;
-    color: #475569;
+  display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6b7280;
 }
-
 .collection-route-controls select,
 .collection-route-controls button {
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 13px;
+  border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; font-size: 13px;
+  background: #fff; color: #374151;
 }
-
 .collection-route-controls button {
-    background: #2563eb;
-    color: #fff;
-    cursor: pointer;
+  background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+  border-color: transparent; color: #fff; cursor: pointer; font-weight: 600;
 }
-
 .collection-route-controls button:last-child {
-    background: #64748b;
+  background: #fff; border-color: #e5e7eb; color: #6b7280;
 }
-
 .collection-route-result {
-    margin-top: 10px;
-    padding: 10px;
-    border-radius: 8px;
-    background: #f8fafc;
-    color: #0f172a;
-    font-size: 13px;
-    line-height: 1.6;
+  margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+  background: #F8F9FB; color: #111827; font-size: 13px; line-height: 1.6;
 }
-
 .collection-route-error {
-    margin-top: 8px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    background: #fff2f2;
-    color: #b91c1c;
-    font-size: 13px;
+  margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: #fff2f2; color: #b91c1c; font-size: 13px;
 }
-
 .collection-point-marker {
-    background: #2563eb;
-    color: #ffffff;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
-    font-size: 13px;
+  background: #3B82F6; color: #fff; border: 2px solid #fff; border-radius: 50%;
+  width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700; box-shadow: 0 2px 5px rgba(0,0,0,.25); font-size: 13px;
 }
-
-.collection-point-marker.start {
-    background: #22c55e;
-}
-
-.collection-point-marker.end {
-    background: #ef4444;
-}
-
-.collection-point-marker.intermediate {
-    background: #2563eb;
-}
-
+.collection-point-marker.start { background: #22c55e; }
+.collection-point-marker.end { background: #ef4444; }
+.collection-point-marker.intermediate { background: #3B82F6; }
 .collection-route-visit-badge {
-    margin-top: 4px;
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 999px;
-    background: #0f172a;
-    color: #fff;
-    font-size: 11px;
+  margin-top: 4px; display: inline-block; padding: 2px 6px; border-radius: 999px;
+  background: #111827; color: #fff; font-size: 11px;
 }
 
-    .alert-danger {
-        background: #fff2f2;
-        border: 1px solid #fecaca;
-    }
-
-    .alert-warning {
-        background: #fff9e8;
-        border: 1px solid #fde68a;
-    }
-
-    .alert-unverified {
-        background: #fef3c7;
-        border: 1px solid #fcd34d;
-    }
-
-    .alert-delay {
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-    .marine-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .marine-main-grid {
-        grid-template-columns: 1fr;
-    }
+@media (max-width: 1100px) {
+  .marine-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .marine-main-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .marine-summary-grid { grid-template-columns: 1fr; }
 }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />

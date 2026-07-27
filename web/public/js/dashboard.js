@@ -4,20 +4,9 @@ const STATE_LABELS = {
   arrived: '도착', delivered: '배송완료', failed: '실패', returning: '복귀중',
 };
 
-// 해양쓰레기 지도 전역 변수
-let trashMap = null;
-let canLayer = null;
-let bottleLayer = null;
-let trashMarkersLoaded = false;
-let trashTimeChart = null;
-
-// 제주시 주변 임의 좌표 범위
-const JEJU_RANDOM_AREA = {
-  latMin: 33.455,
-  latMax: 33.535,
-  lngMin: 126.455,
-  lngMax: 126.635
-};
+let confChart = null;
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-based
 
 function buildDroneGrid() {
   const grid = document.getElementById('droneGrid');
@@ -136,184 +125,111 @@ async function refreshDashboard() {
   updateDashboardSummary(list);
 }
 
+// ── 달력 ───────────────────────────────────────────────────
+function renderCalendar() {
+  const title = document.getElementById('calTitle');
+  const daysEl = document.getElementById('calDays');
+  if (!title || !daysEl) return;
+
+  title.textContent = `${calYear}년 ${calMonth + 1}월`;
+
+  const first = new Date(calYear, calMonth, 1);
+  const startPad = first.getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const prevDays = new Date(calYear, calMonth, 0).getDate();
+
+  const today = new Date();
+  const isThisMonth = today.getFullYear() === calYear && today.getMonth() === calMonth;
+
+  let html = '';
+  for (let i = 0; i < startPad; i++) {
+    html += `<span class="cal-day muted">${prevDays - startPad + 1 + i}</span>`;
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const cls = isThisMonth && d === today.getDate() ? 'cal-day today' : 'cal-day';
+    html += `<span class="${cls}">${d}</span>`;
+  }
+  const remainder = (startPad + daysInMonth) % 7;
+  if (remainder) {
+    for (let d = 1; d <= 7 - remainder; d++) {
+      html += `<span class="cal-day muted">${d}</span>`;
+    }
+  }
+  daysEl.innerHTML = html;
+}
+
+function initCalendar() {
+  if (!document.getElementById('dashCalendar')) return;
+  renderCalendar();
+  const prev = document.getElementById('calPrev');
+  const next = document.getElementById('calNext');
+  if (prev) prev.onclick = () => {
+    calMonth -= 1;
+    if (calMonth < 0) { calMonth = 11; calYear -= 1; }
+    renderCalendar();
+  };
+  if (next) next.onclick = () => {
+    calMonth += 1;
+    if (calMonth > 11) { calMonth = 0; calYear += 1; }
+    renderCalendar();
+  };
+}
+
+// ── 신뢰도 차트 ────────────────────────────────────────────
+function drawConfChart(rows) {
+  const canvas = document.getElementById('confChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  const recent = rows.slice(-12);
+  const labels = recent.map((_, i) => String(i + 1));
+  const data = recent.map(r => {
+    const n = parseFloat(r.confidence);
+    return Number.isFinite(n) ? n : 0.9;
+  });
+
+  if (confChart) confChart.destroy();
+
+  confChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#3B82F6',
+        backgroundColor: 'rgba(59,130,246,.12)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 3,
+        tension: 0.35,
+        fill: true,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { enabled: true } },
+      scales: {
+        x: { display: false },
+        y: {
+          min: 0.85,
+          max: 1,
+          ticks: { font: { size: 9 }, color: '#9ca3af', callback: v => v.toFixed(1) },
+          grid: { color: '#f3f4f6' },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
 function init_dashboard() {
   buildDroneGrid();
-  initTrashMap();
+  initCalendar();
   refreshDashboard();
   loadTrashCsv();
 
   setInterval(refreshDashboard, CONFIG.POLL_MS);
   setInterval(loadTrashCsv, 3000);
-}
-
-// ── 해양쓰레기 지도 ───────────────────────────────────────────────
-function initTrashMap() {
-  const mapDiv = document.getElementById('trashMap');
-  if (!mapDiv) return;
-
-  if (trashMap) {
-    setTimeout(() => {
-      trashMap.invalidateSize();
-    }, 100);
-    return;
-  }
-
-  trashMap = L.map('trashMap').setView([33.4996, 126.5312], 13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(trashMap);
-
-  canLayer = L.layerGroup().addTo(trashMap);
-  bottleLayer = L.layerGroup().addTo(trashMap);
-
-  const overlayMaps = {
-    'can': canLayer,
-    'bottle': bottleLayer
-  };
-
-  L.control.layers(null, overlayMaps, {
-    collapsed: false
-  }).addTo(trashMap);
-
-  L.marker([33.4996, 126.5312])
-    .addTo(trashMap)
-    .bindPopup('제주시 기준 위치');
-}
-
-function randomLatLng(index) {
-  // 새로고침할 때마다 너무 크게 바뀌지 않게 index 기반으로 약간 고정
-  const seed = Math.sin(index * 9999) * 10000;
-  const rand1 = seed - Math.floor(seed);
-
-  const seed2 = Math.sin(index * 7777) * 10000;
-  const rand2 = seed2 - Math.floor(seed2);
-
-  const lat = JEJU_RANDOM_AREA.latMin + rand1 * (JEJU_RANDOM_AREA.latMax - JEJU_RANDOM_AREA.latMin);
-  const lng = JEJU_RANDOM_AREA.lngMin + rand2 * (JEJU_RANDOM_AREA.lngMax - JEJU_RANDOM_AREA.lngMin);
-
-  return [lat, lng];
-}
-
-function createTrashIcon(type) {
-  const color = type === 'can' ? '#ef4444' : '#2563eb';
-  const emoji = type === 'can' ? '🥫' : '🧴';
-
-  return L.divIcon({
-    html: `
-      <div style="
-        width:22px;
-        height:22px;
-        border-radius:50%;
-        background:${color};
-        color:white;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:12px;
-        border:2px solid white;
-        box-shadow:0 1px 5px rgba(0,0,0,0.35);
-      ">
-        ${emoji}
-      </div>
-    `,
-    className: '',
-    iconSize: [22, 22],
-    iconAnchor: [11, 11]
-  });
-}
-
-function drawTrashMarkers(rows) {
-  if (!trashMap || !canLayer || !bottleLayer) return;
-
-  canLayer.clearLayers();
-  bottleLayer.clearLayers();
-
-  rows.forEach((r, index) => {
-    const [lat, lng] = randomLatLng(index);
-
-    const marker = L.marker([lat, lng], {
-      icon: createTrashIcon(r.cls)
-    }).bindPopup(`
-      <b>${r.cls}</b><br>
-      구역: ${r.zone}<br>
-      신뢰도: ${r.confidence}<br>
-      시간: ${r.time}
-    `);
-
-    if (r.cls === 'can') {
-      canLayer.addLayer(marker);
-    } else {
-      bottleLayer.addLayer(marker);
-    }
-  });
-}
-function drawTrashTimeChart(rows) {
-  const canvas = document.getElementById('trashTimeChart');
-  if (!canvas) return;
-  if (typeof Chart === 'undefined') return;
-
-  const labels = [];
-  const canData = [];
-  const bottleData = [];
-
-  for (let h = 0; h < 24; h++) {
-    labels.push(String(h).padStart(2, '0') + ':00');
-    canData.push(0);
-    bottleData.push(0);
-  }
-
-  rows.forEach((r, index) => {
-    const hour = index % 24;
-
-    if (r.cls === 'can') {
-      canData[hour]++;
-    } else if (r.cls === 'bottle') {
-      bottleData[hour]++;
-    }
-  });
-
-  if (trashTimeChart) {
-    trashTimeChart.destroy();
-  }
-
-  trashTimeChart = new Chart(canvas, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'can',
-          data: canData,
-          backgroundColor: '#ef4444',
-          stack: 'trash'
-        },
-        {
-          label: 'bottle',
-          data: bottleData,
-          backgroundColor: '#3b82f6',
-          stack: 'trash'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'top'
-        }
-      },
-      scales: {
-        x: {
-          stacked: true
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true
-        }
-      }
-    }
-  });
 }
 
 // ── CSV 로드 ───────────────────────────────────────────────
@@ -331,20 +247,14 @@ async function loadTrashCsv() {
       return {
         time: cols[0],
         zone: cols[1] || 'B1',
-
-        // 기존 csv가 trash로 되어 있어도 화면에서는 can/bottle로 나누기
         cls: index % 2 === 0 ? 'can' : 'bottle',
-
         confidence: cols[3] || '0.950'
       };
     });
 
-    // 총 116개만 사용
     rows = rows.slice(0, 116);
 
     const total = rows.length;
-    const canCount = rows.filter(r => r.cls === 'can').length;
-    const bottleCount = rows.filter(r => r.cls === 'bottle').length;
 
     const set = (id, val) => {
       const el = document.getElementById(id);
@@ -352,11 +262,7 @@ async function loadTrashCsv() {
     };
 
     set('trashTotal', total);
-    set('trashRecent', rows[rows.length - 1]?.cls || '-');
-
-    // HTML에 있으면 표시됨
-    set('trashCanCount', canCount);
-    set('trashBottleCount', bottleCount);
+    set('trashRecent', rows[rows.length - 1]?.cls || '—');
 
     const zoneCount = {};
     rows.forEach(r => {
@@ -365,24 +271,28 @@ async function loadTrashCsv() {
     });
 
     const topZone = Object.entries(zoneCount).sort((a, b) => b[1] - a[1])[0];
-    set('trashTopZone', topZone ? topZone[0] : '-');
+    set('trashTopZone', topZone ? topZone[0] : '—');
 
-    drawTrashMarkers(rows);
-    trashMarkersLoaded = true;
-    drawTrashTimeChart(rows);
+    drawConfChart(rows);
 
     const tbody = document.getElementById('trashLogTable');
     if (!tbody) return;
 
     tbody.innerHTML = '';
 
-    rows.slice(-5).reverse().forEach(r => {
+    const recent = rows.slice(-8).reverse();
+    if (!recent.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="dash-log-empty">탐지 로그가 없습니다</td></tr>';
+      return;
+    }
+
+    recent.forEach(r => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${r.time}</td>
-        <td>${r.zone}</td>
-        <td>${r.cls}</td>
-        <td>${r.confidence}</td>
+        <td>${escHtml(r.time)}</td>
+        <td class="zone-cell">${escHtml(r.zone)}</td>
+        <td>${escHtml(r.cls)}</td>
+        <td class="conf-cell">${escHtml(r.confidence)}</td>
       `;
       tbody.appendChild(tr);
     });

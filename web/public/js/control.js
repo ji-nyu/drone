@@ -59,7 +59,7 @@ function changeDrone(id) {
   if (_connected) disconnectDrone();
   else {
     const btnConn = document.getElementById('btnConnect');
-    if (btnConn) { btnConn.disabled = false; btnConn.textContent = '● 연결'; }
+    if (btnConn) { btnConn.disabled = false; btnConn.textContent = '연결'; }
   }
 }
 
@@ -67,7 +67,10 @@ function changeDrone(id) {
 function applyStatus(d) {
   const isOn = _connected || d.online !== false;
   const connEl = document.getElementById('ctrlConn');
-  if (connEl) { connEl.textContent = isOn ? '● 연결됨' : '○ 미연결'; connEl.style.color = isOn ? '#22c55e' : '#9ca3af'; }
+  if (connEl) {
+    connEl.textContent = isOn ? '연결됨' : '미연결';
+    connEl.className = 'conn-status' + (isOn ? ' on' : '');
+  }
 
 
   if (d.battery != null) {
@@ -253,7 +256,7 @@ async function connectDrone() {
     tryVideo();
     startVlmPolling();
   } catch (e) {
-    btnConn.disabled = false; btnConn.textContent = '● 연결';
+    btnConn.disabled = false; btnConn.textContent = '연결';
     addLog('error', `[${selectedDrone}] 스트리밍 실패: ${e.message}`, 'logBody');
   }
 }
@@ -278,8 +281,8 @@ async function disconnectDrone() {
   const ph = document.getElementById('videoPh');
   if (ph) ph.style.display = 'flex';
 
-  btnDisc.disabled = false; btnDisc.style.display = 'none';
-  btnConn.style.display = ''; btnConn.textContent = '● 연결';
+  btnDisc.disabled = false; btnDisc.style.display = 'none'; btnDisc.textContent = '연결 해제';
+  btnConn.style.display = ''; btnConn.textContent = '연결';
   addLog('info', `[${selectedDrone}] 스트리밍 중지`, 'logBody');
   saveLog('info', `[${selectedDrone}] 스트리밍 중지`);
 }

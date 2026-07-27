@@ -46,7 +46,8 @@ class Drone extends BaseController
 
     public function index(): string
     {
-        return $this->render('dashboard', '대시보드', '▦', 'dashboard');
+        $homeIcon = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 9.5L10 3.5l6.5 6V16a1 1 0 01-1 1h-3.5v-4.5H8V17H4.5a1 1 0 01-1-1V9.5z"/></svg>';
+        return $this->render('dashboard', '대시보드', $homeIcon, 'dashboard');
     }
 
     public function marineTrash(): string
@@ -91,7 +92,7 @@ class Drone extends BaseController
         return $this->render(
             'marine_trash',
             '해양쓰레기',
-            '🌊',
+            '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7.5h10v8.5a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 015 16V7.5z"/><path d="M3.5 7.5h13M8 7.5V5.5a2 2 0 014 0v2"/></svg>',
             'marine_trash',
             [
                 'marineZones' => $marineZones,
@@ -170,23 +171,27 @@ class Drone extends BaseController
     public function control(): string
     {
         $droneId = $this->request->getGet('drone') ?? 'TT-01';
-        return $this->render('control', '드론 관제', '✦', 'control', [
+        $icon = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3.5l1.2 3.2h3.4l-2.7 2 1 3.3L10 10.5 7.1 12l1-3.3-2.7-2h3.4L10 3.5z"/><circle cx="10" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>';
+        return $this->render('control', '드론 관제', $icon, 'control', [
             'selectedDrone' => esc($droneId),
         ]);
     }
 
     public function missions(): string
     {
-        return $this->render('missions', '임무 현황', '≡', 'missions');
+        $icon = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="2.5" width="12" height="15" rx="1.5"/><path d="M7 7h6M7 10.5h6M7 14h3.5"/></svg>';
+        return $this->render('missions', '임무 현황', $icon, 'missions');
     }
 
     public function logs(): string
     {
-        return $this->render('logs', '비행 로그', '◈', 'logs');
+        $icon = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r="1" fill="currentColor" stroke="none"/></svg>';
+        return $this->render('logs', '비행 로그', $icon, 'logs');
     }
 
     public function settings(): string
     {
-        return $this->render('settings', '설정', '⊙', 'settings');
+        $icon = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="2.5"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4"/></svg>';
+        return $this->render('settings', '설정', $icon, 'settings');
     }
 }

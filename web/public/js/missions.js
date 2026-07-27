@@ -189,21 +189,21 @@ async function submitMission() {
 function renderMissions(list) {
   const tbody = document.getElementById('missionBody');
   if (!list || !list.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:40px 0">임무 데이터 없음</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="missions-empty-row">임무 데이터 없음</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(m => `
-    <tr style="cursor:pointer" onclick="loadDetail(${m.id ?? ''})">
+    <tr class="mission-row" onclick="loadDetail(${m.id ?? ''})">
       <td><strong>${escHtml(String(m.id ?? '—'))}</strong></td>
       <td>
         <a href="/drone/control?drone=${encodeURIComponent(m.drone_id ?? '')}"
-           style="color:#1d4ed8;text-decoration:none"
+           class="drone-link"
            onclick="event.stopPropagation()">${escHtml(m.drone_id ?? '—')}</a>
       </td>
       <td><span class="badge ${MISSION_STATE_BADGE[m.state] ?? 'gray'}">${MISSION_STATE_KO[m.state] ?? escHtml(m.state ?? '—')}</span></td>
-      <td style="font-size:11px;color:#6b7280">${m.action_count != null ? m.action_count + '개' : '—'}</td>
-      <td style="font-size:11px">${escHtml(m.started_at  ?? '—')}</td>
-      <td style="font-size:11px">${escHtml(m.ended_at ?? '—')}</td>
+      <td class="muted-cell">${m.action_count != null ? m.action_count + '개' : '—'}</td>
+      <td class="muted-cell">${escHtml(m.started_at  ?? '—')}</td>
+      <td class="muted-cell">${escHtml(m.ended_at ?? '—')}</td>
     </tr>`).join('');
 }
 
@@ -521,12 +521,8 @@ function switchActionMode(mode) {
   const isJs = mode === 'js';
   document.getElementById('mManualArea').style.display = isJs ? 'none' : '';
   document.getElementById('mJsArea').style.display     = isJs ? ''     : 'none';
-  document.getElementById('mModeManualBtn').style.cssText =
-    'flex:1;padding:5px 0;font-size:11px;font-weight:600;border:none;cursor:pointer;' +
-    (isJs ? 'background:#f3f4f6;color:#6b7280' : 'background:#1d4ed8;color:#fff');
-  document.getElementById('mModeJsBtn').style.cssText =
-    'flex:1;padding:5px 0;font-size:11px;font-weight:600;border:none;cursor:pointer;' +
-    (isJs ? 'background:#1d4ed8;color:#fff' : 'background:#f3f4f6;color:#6b7280');
+  document.getElementById('mModeManualBtn').classList.toggle('active', !isJs);
+  document.getElementById('mModeJsBtn').classList.toggle('active', isJs);
 }
 
 function parseActionJs() {
