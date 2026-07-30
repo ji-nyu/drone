@@ -11,6 +11,7 @@ $routes->get('/',               'Drone::index');
 $routes->get('drone',           'Drone::index');
 $routes->get('drone/marine-trash', 'Drone::marineTrash');
 $routes->get('drone/marine-trash-data', 'Drone::marineTrashData');
+$routes->get('api/detections/log', 'Drone::detectionLog');
 $routes->get('api/marine/collection-points', 'Drone::collectionPoints');
 $routes->get('drone/control',   'Drone::control');
 $routes->get('drone/missions',  'Drone::missions');

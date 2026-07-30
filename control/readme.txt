@@ -9,7 +9,19 @@ control — 빠른 안내 (API 실행·테스트)
 0. 환경 구축
 --------------------------------------------------------------------------------
 
-sudo apt install -y libgl1 libglib2.0-0
+의존성 전체 목록·역할별 설치 방법:
+
+    ../DEPENDENCIES.md
+    requirements-report.txt   (보고서 LLM 전용)
+
+권장 (제어 API):
+
+    cd control
+    uv sync
+
+Linux 추가 패키지:
+
+    sudo apt install -y libgl1 libglib2.0-0
 
 --------------------------------------------------------------------------------
 1. API 서버 실행

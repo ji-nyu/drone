@@ -1,0 +1,25 @@
+# 보고서 생성용 (test3.py / 웹 보고서 버튼)
+# 제어 API(uv sync) 환경과 분리해서 설치하는 것을 권장합니다.
+#
+# ---------------------------------------------------------------
+# 1) Word 문서 모듈 (공통)
+# ---------------------------------------------------------------
+python-docx>=1.1.0
+
+# ---------------------------------------------------------------
+# 2) llama-cpp-python  —  platform별 wheel로 따로 설치
+#
+#    AMD Windows (권장: Vulkan):
+#      pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/vulkan
+#
+#    AMD Windows (HIP 대안):
+#      pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/hip-radeon
+#
+#    NVIDIA CUDA 12.1:
+#      pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu121
+#
+#    CPU only:
+#      pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+#
+#    일반 pip install llama-cpp-python 은 Windows에서 경로 오류가 자주 납니다.
+# ---------------------------------------------------------------

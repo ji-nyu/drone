@@ -226,78 +226,83 @@ function init_dashboard() {
   buildDroneGrid();
   initCalendar();
   refreshDashboard();
-  loadTrashCsv();
+  loadDetectionLog();
 
   setInterval(refreshDashboard, CONFIG.POLL_MS);
-  setInterval(loadTrashCsv, 3000);
+  setInterval(loadDetectionLog, 3000);
 }
 
-// ── CSV 로드 ───────────────────────────────────────────────
-async function loadTrashCsv() {
+function formatDetectionTime(time) {
+  if (!time) return '—';
+  if (String(time).includes('T')) {
+    return String(time).replace('T', ' ').replace(/\+\d{2}:\d{2}$/, '').slice(0, 19);
+  }
+  return String(time);
+}
+
+function normalizeDetectionEvents(payload) {
+  const events = Array.isArray(payload?.events) ? payload.events : [];
+  return events.map((e) => ({
+    time: formatDetectionTime(e.time || e.detected_at),
+    zone: e.zone || e.zone_id || '—',
+    cls: String(e.class || e.trash_type || e.cls || '—').trim() || '—',
+    confidence: e.confidence != null
+      ? Number(e.confidence)
+      : (e.average_confidence != null ? Number(e.average_confidence) : null),
+    trash_count: e.trash_count != null ? Number(e.trash_count) : 1,
+  }));
+}
+
+// ── 탐지 로그 (inspection_detections_raw.json) ─────────────
+async function loadDetectionLog() {
   try {
-    const res = await fetch('/detection_zone_log.csv?ts=' + Date.now());
-    const text = await res.text();
-
-    const lines = text.trim().split('\n');
-    if (lines.length <= 1) return;
-
-    let rows = lines.slice(1).map((line, index) => {
-      const cols = line.split(',');
-
-      return {
-        time: cols[0],
-        zone: cols[1] || 'B1',
-        cls: index % 2 === 0 ? 'can' : 'bottle',
-        confidence: cols[3] || '0.950'
-      };
-    });
-
-    rows = rows.slice(0, 116);
-
-    const total = rows.length;
+    const res = await fetch('/api/detections/log?ts=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const payload = json.data ?? json;
+    const rows = normalizeDetectionEvents(payload);
 
     const set = (id, val) => {
       const el = document.getElementById(id);
       if (el) el.textContent = val;
     };
 
+    const total = payload.trash_total != null
+      ? payload.trash_total
+      : rows.reduce((sum, r) => sum + (r.trash_count || 1), 0);
+
     set('trashTotal', total);
-    set('trashRecent', rows[rows.length - 1]?.cls || '—');
+    set('trashRecent', rows.length ? rows[rows.length - 1].cls : '—');
+    set('trashTopZone', payload.top_zone || (rows.length ? rows[rows.length - 1].zone : '—'));
 
-    const zoneCount = {};
-    rows.forEach(r => {
-      if (!r.zone) return;
-      zoneCount[r.zone] = (zoneCount[r.zone] || 0) + 1;
-    });
-
-    const topZone = Object.entries(zoneCount).sort((a, b) => b[1] - a[1])[0];
-    set('trashTopZone', topZone ? topZone[0] : '—');
-
-    drawConfChart(rows);
+    drawConfChart(rows.map(r => ({
+      confidence: r.confidence != null && !Number.isNaN(r.confidence) ? r.confidence : 0.9,
+    })));
 
     const tbody = document.getElementById('trashLogTable');
     if (!tbody) return;
 
     tbody.innerHTML = '';
-
-    const recent = rows.slice(-8).reverse();
+    const recent = rows.slice().reverse().slice(0, 8);
     if (!recent.length) {
       tbody.innerHTML = '<tr><td colspan="4" class="dash-log-empty">탐지 로그가 없습니다</td></tr>';
       return;
     }
 
     recent.forEach(r => {
+      const conf = r.confidence != null && !Number.isNaN(r.confidence)
+        ? Number(r.confidence).toFixed(3)
+        : '—';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${escHtml(r.time)}</td>
         <td class="zone-cell">${escHtml(r.zone)}</td>
         <td>${escHtml(r.cls)}</td>
-        <td class="conf-cell">${escHtml(r.confidence)}</td>
+        <td class="conf-cell">${escHtml(conf)}</td>
       `;
       tbody.appendChild(tr);
     });
-
   } catch (e) {
-    console.log('CSV load error:', e);
+    console.log('Detection log load error:', e);
   }
 }

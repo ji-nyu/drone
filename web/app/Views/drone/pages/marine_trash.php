@@ -57,7 +57,7 @@
                 <h3>위험 구역 통계 요약</h3>
                 <button type="button" id="btnGenerateReport" class="btn primary marine-report-btn">보고서 생성</button>
             </div>
-            <p class="marine-note">※ 위험도와 알림은 zone_risk_summary.json 기준으로 자동 반영됩니다.</p>
+            <p class="marine-note">※ 탐지 로그·구역 현황은 inspection_detections_raw.json / zone_risk_summary.json 기준입니다.</p>
             <p id="reportGenStatus" class="marine-report-status" aria-live="polite"></p>
         </div>
 

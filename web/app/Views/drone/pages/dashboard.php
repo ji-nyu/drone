@@ -68,7 +68,7 @@
       </span>
     </div>
     <div class="kpi-value" id="trashTotal">0</div>
-    <div class="kpi-sub">CSV 누적 기준</div>
+    <div class="kpi-sub">JSON 누적 기준</div>
   </div>
 
   <div class="kpi-card">

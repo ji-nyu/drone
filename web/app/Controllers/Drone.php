@@ -132,7 +132,94 @@ class Drone extends BaseController
             'fixed' => $marineZones,
             'detection' => $inspectionDetections,
             'risk' => $zoneRiskSummary,
+            'log' => $this->loadDetectionLog(),
         ]);
+    }
+
+    /**
+     * 통합 탐지 로그 — inspection_detections_raw.json 단일 소스
+     * GET /api/detections/log
+     */
+    public function detectionLog()
+    {
+        $log = $this->loadDetectionLog();
+        return $this->response->setJSON([
+            'ok'   => true,
+            'data' => $log,
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadDetectionLog(): array
+    {
+        $default = [
+            'schema_version' => '1.0',
+            'mission'        => [],
+            'detections'     => [],
+        ];
+
+        $path = APPPATH . 'Data/inspection_detections_raw.json';
+        $raw  = $this->loadJsonFile($path, $default);
+        $detections = isset($raw['detections']) && is_array($raw['detections'])
+            ? $raw['detections']
+            : [];
+
+        // 최신 탐지가 위로 오도록 시간순 정렬
+        usort($detections, static function ($a, $b) {
+            $ta = (string) ($a['detected_at'] ?? $a['status_updated_at'] ?? '');
+            $tb = (string) ($b['detected_at'] ?? $b['status_updated_at'] ?? '');
+            return strcmp($ta, $tb);
+        });
+
+        $events = [];
+        $trashTotal = 0;
+        $zoneTotals = [];
+
+        foreach ($detections as $d) {
+            if (!is_array($d)) {
+                continue;
+            }
+            $count = (int) ($d['trash_count'] ?? 1);
+            if ($count < 1) {
+                $count = 1;
+            }
+            $trashTotal += $count;
+
+            $zone = (string) ($d['zone_id'] ?? $d['zone'] ?? '—');
+            if ($zone !== '' && $zone !== '—') {
+                $zoneTotals[$zone] = ($zoneTotals[$zone] ?? 0) + $count;
+            }
+
+            $conf = $d['average_confidence'] ?? $d['confidence'] ?? null;
+            $events[] = [
+                'detection_id' => $d['detection_id'] ?? null,
+                'time'         => $d['detected_at'] ?? $d['status_updated_at'] ?? null,
+                'zone'         => $zone,
+                'class'        => $d['trash_type'] ?? $d['class'] ?? '—',
+                'confidence'   => is_numeric($conf) ? round((float) $conf, 3) : null,
+                'trash_count'  => $count,
+                'status'       => $d['status'] ?? null,
+            ];
+        }
+
+        $topZone = null;
+        if ($zoneTotals !== []) {
+            arsort($zoneTotals);
+            $topZone = array_key_first($zoneTotals);
+        }
+
+        return [
+            'schema_version' => $raw['schema_version'] ?? '1.0',
+            'source'         => 'inspection_detections_raw',
+            'updated_at'     => $raw['generated_at'] ?? ($raw['mission']['inspection_date'] ?? null),
+            'mission'        => $raw['mission'] ?? [],
+            'event_count'    => count($events),
+            'trash_total'    => $trashTotal,
+            'top_zone'       => $topZone,
+            'events'         => $events,
+        ];
     }
 
     public function collectionPoints()

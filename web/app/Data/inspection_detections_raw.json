@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "data_status": "prototype_sample",
+  "data_status": "live",
   "note": "폴리곤만 제공되어 탐지 수량·상태·시간은 기능 시연용 예시값입니다. 실제 탐지 결과로 교체하세요.",
   "mission": {
     "mission_id": "MISSION-20260721-001",
@@ -69,6 +69,54 @@
       "status_updated_at": "2026-07-21T12:10:00+09:00",
       "collected_at": null,
       "average_confidence": 0.77
+    },
+    {
+      "detection_id": "DET-20260727-142548-0001",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "B1",
+      "trash_type": "플라스틱병",
+      "trash_count": 2944,
+      "status": "uncollected",
+      "detected_at": "2026-07-27T14:25:48+09:00",
+      "status_updated_at": "2026-07-29T15:34:24+09:00",
+      "collected_at": null,
+      "average_confidence": 0.607
+    },
+    {
+      "detection_id": "DET-20260727-142553-0002",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "C1",
+      "trash_type": "플라스틱병",
+      "trash_count": 297,
+      "status": "uncollected",
+      "detected_at": "2026-07-27T14:25:53+09:00",
+      "status_updated_at": "2026-07-29T15:32:23+09:00",
+      "collected_at": null,
+      "average_confidence": 0.592
+    },
+    {
+      "detection_id": "DET-20260727-142600-0003",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "A1",
+      "trash_type": "플라스틱병",
+      "trash_count": 412,
+      "status": "uncollected",
+      "detected_at": "2026-07-27T14:26:00+09:00",
+      "status_updated_at": "2026-07-29T15:34:22+09:00",
+      "collected_at": null,
+      "average_confidence": 0.578
+    },
+    {
+      "detection_id": "DET-20260727-142642-0004",
+      "mission_id": "MISSION-20260721-001",
+      "zone_id": "A1",
+      "trash_type": "polythene",
+      "trash_count": 2,
+      "status": "uncollected",
+      "detected_at": "2026-07-27T14:26:42+09:00",
+      "status_updated_at": "2026-07-27T14:26:43+09:00",
+      "collected_at": null,
+      "average_confidence": 0.373
     }
   ]
 }
